@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("Dapper.Extensions")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("一个基于Dapper扩展的ORM框架")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("Dapper.Extensions")]
