@@ -1,0 +1,168 @@
+﻿USE [Sample]
+GO
+/****** Object:  StoredProcedure [dbo].[IdentityKey_Insert]    Script Date: 2015/12/15 12:04:06 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE PROCEDURE [dbo].[IdentityKey_Insert]
+    (    
+       @Value VARCHAR(50)   
+    )    
+     AS    
+INSERT INTO [IdentityKey] ([Value]) VALUES (@Value)
+GO
+/****** Object:  StoredProcedure [dbo].[IdentityKey_Select_Single]    Script Date: 2015/12/15 12:04:06 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE PROCEDURE [dbo].[IdentityKey_Select_Single]
+    (    
+       @Id int
+    )    
+     AS    
+select * from [IdentityKey] where [Id]=@Id
+GO
+/****** Object:  StoredProcedure [dbo].[User_Select_ResultValue]    Script Date: 2015/12/15 12:04:06 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+Create PROCEDURE [dbo].[User_Select_ResultValue]
+    (    
+       @RoleId int,
+	   @TotalRecords int output
+    )    
+     AS    
+select * from [User] where [RoleId]=@RoleId
+select @TotalRecords = count(*) from [User]
+GO
+/****** Object:  Table [dbo].[Alias]    Script Date: 2015/12/15 12:04:06 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_PADDING ON
+GO
+CREATE TABLE [dbo].[Alias](
+	[AliasId] [varchar](50) NOT NULL,
+	[sName] [varchar](50) NULL,
+	[iAge] [int] NULL,
+	[dCreatedTime] [datetime] NULL,
+ CONSTRAINT [PK_Alias] PRIMARY KEY CLUSTERED 
+(
+	[AliasId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+SET ANSI_PADDING OFF
+GO
+/****** Object:  Table [dbo].[DataType]    Script Date: 2015/12/15 12:04:06 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_PADDING ON
+GO
+CREATE TABLE [dbo].[DataType](
+	[Id] [varchar](50) NOT NULL,
+	[TInt] [int] NULL,
+	[TLong] [bigint] NULL,
+	[TDecimal] [decimal](18, 4) NULL,
+	[TFloat] [real] NULL,
+	[TDouble] [float] NULL,
+	[TBool] [bit] NULL,
+	[TDateTime] [datetime] NULL,
+	[TString] [varchar](50) NULL,
+	[TBypes] [varbinary](5000) NULL,
+	[TEnum] [int] NULL,
+	[TSingle] [float] NULL,
+ CONSTRAINT [PK_DataType] PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+SET ANSI_PADDING OFF
+GO
+/****** Object:  Table [dbo].[IdentityKey]    Script Date: 2015/12/15 12:04:06 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[IdentityKey](
+	[Id] [int] IDENTITY(1,1) NOT NULL,
+	[Value] [nvarchar](50) NULL,
+ CONSTRAINT [PK_IdentityKey] PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+/****** Object:  Table [dbo].[Multikey]    Script Date: 2015/12/15 12:04:06 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_PADDING ON
+GO
+CREATE TABLE [dbo].[Multikey](
+	[Key1] [varchar](50) NOT NULL,
+	[Key2] [varchar](50) NOT NULL,
+	[Value] [varchar](500) NULL,
+ CONSTRAINT [PK_Multikey] PRIMARY KEY CLUSTERED 
+(
+	[Key1] ASC,
+	[Key2] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+SET ANSI_PADDING OFF
+GO
+/****** Object:  Table [dbo].[Role]    Script Date: 2015/12/15 12:04:06 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_PADDING ON
+GO
+CREATE TABLE [dbo].[Role](
+	[Id] [int] IDENTITY(1,1) NOT NULL,
+	[Name] [varchar](20) NOT NULL,
+	[CreatedTime] [datetime] NOT NULL,
+	[LastModifyTime] [datetime] NOT NULL,
+	[Version] [int] NULL,
+ CONSTRAINT [PK_Role] PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+SET ANSI_PADDING OFF
+GO
+/****** Object:  Table [dbo].[User]    Script Date: 2015/12/15 12:04:06 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_PADDING ON
+GO
+CREATE TABLE [dbo].[User](
+	[Id] [varchar](32) NOT NULL,
+	[Name] [varchar](20) NOT NULL,
+	[Age] [int] NOT NULL,
+	[RoleId] [int] NOT NULL,
+	[CreatedTime] [datetime] NOT NULL,
+	[LastModifyTime] [datetime] NOT NULL,
+ CONSTRAINT [PK_User] PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+

@@ -1,0 +1,113 @@
+﻿DROP TABLE IF EXISTS `Alias`;
+CREATE TABLE `Alias` (
+  `AliasId` varchar(50) NOT NULL,
+  `sName` varchar(50) DEFAULT NULL,
+  `iAge` int(11) DEFAULT NULL,
+  `dCreatedTime` datetime DEFAULT NULL,
+  PRIMARY KEY (`AliasId`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+
+DROP TABLE IF EXISTS `DataType`;
+CREATE TABLE `DataType` (
+  `Id` varchar(50) NOT NULL,
+  `TInt` int(11) DEFAULT NULL,
+  `TLong` bigint(20) DEFAULT NULL,
+  `TDecimal` decimal(18,4) DEFAULT NULL,
+  `TFloat` double DEFAULT NULL,
+  `TDouble` double DEFAULT NULL,
+  `TBool` bit(1) DEFAULT NULL,
+  `TDateTime` datetime DEFAULT NULL,
+  `TString` varchar(50) DEFAULT NULL,
+  `TBypes` varbinary(5000) DEFAULT NULL,
+  `TEnum` int(11) DEFAULT NULL,
+  `TSingle` float DEFAULT NULL,
+  PRIMARY KEY (`Id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+
+DROP TABLE IF EXISTS `IdentityKey`;
+CREATE TABLE `IdentityKey` (
+  `Id` int(11) NOT NULL AUTO_INCREMENT,
+  `Value` varchar(50) DEFAULT NULL,
+  PRIMARY KEY (`Id`)
+) ENGINE=InnoDB AUTO_INCREMENT=36 DEFAULT CHARSET=utf8;
+
+
+
+DROP TABLE IF EXISTS `Multikey`;
+CREATE TABLE `Multikey` (
+  `Key1` varchar(50) NOT NULL,
+  `Key2` varchar(50) NOT NULL,
+  `Value` varchar(500) DEFAULT NULL,
+  PRIMARY KEY (`Key1`,`Key2`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+
+DROP TABLE IF EXISTS `Role`;
+CREATE TABLE `Role` (
+  `Id` int(11) NOT NULL AUTO_INCREMENT,
+  `Name` varchar(20) DEFAULT NULL,
+  `CreatedTime` datetime DEFAULT NULL,
+  `LastModifyTime` datetime DEFAULT NULL,
+  `Version` int(11) DEFAULT NULL,
+  PRIMARY KEY (`Id`)
+) ENGINE=InnoDB AUTO_INCREMENT=143 DEFAULT CHARSET=utf8;
+
+
+DROP TABLE IF EXISTS `User`;
+CREATE TABLE `User` (
+  `Id` varchar(32) NOT NULL,
+  `Name` varchar(20) DEFAULT NULL,
+  `Age` int(11) DEFAULT NULL,
+  `RoleId` int(11) DEFAULT NULL,
+  `CreatedTime` datetime DEFAULT NULL,
+  `LastModifyTime` datetime DEFAULT NULL,
+  PRIMARY KEY (`Id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+
+DROP PROCEDURE IF EXISTS `IdentityKey_Insert`;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `IdentityKey_Insert`(IN `Value` varchar(50))
+BEGIN
+	#Routine body goes here...
+INSERT INTO `IdentityKey` (`Value`) VALUES (@Value);
+END
+;;
+DELIMITER ;
+
+
+DROP PROCEDURE IF EXISTS `IdentityKey_Select_Single`;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `IdentityKey_Select_Single`(in Id int)
+BEGIN
+declare strSql varchar(1000);
+set strSql = CONCAT('select * from `IdentityKey` where `Id`=',Id);
+set @sql = strSql;
+prepare stmt_p from @sql;
+execute stmt_p;
+END
+;;
+DELIMITER ;
+
+
+DROP PROCEDURE IF EXISTS `User_Select_ResultValue`;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `User_Select_ResultValue`(IN `RoleId` int,OUT `TotalRecords` int)
+BEGIN
+declare strSql varchar(1000);
+set strSql = CONCAT('select * from `User` where `RoleId`=',RoleId);
+set @sql = strSql;
+prepare stmt_p from @sql;
+execute stmt_p;
+
+SELECT  COUNT(*) INTO TotalRecords from `User`;
+
+END
+;;
+DELIMITER ;
