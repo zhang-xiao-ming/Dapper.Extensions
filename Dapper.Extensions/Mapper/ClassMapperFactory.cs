@@ -31,16 +31,12 @@ namespace Dapper.Extensions
         {
             return GetMapper(typeof(T), tableName) as IClassMapper<T>;
         }
-
-        /// <summary>
-        /// 获取所有程序集
-        /// </summary>
-        /// <returns></returns>
+        
         private static IEnumerable<Assembly> GetMapperAssemblies()
         {
             if (_mapperAssemblies != null)
                 return _mapperAssemblies;
-            IList<Assembly> assemblys = AppDomain.CurrentDomain.GetAssemblies().Where(assembly => assembly.FullName != typeof(IClassMapper<>).Assembly.FullName && assembly.GetTypes().FirstOrDefault(m => m != null && m.GetInterface(typeof(IClassMapper<>).FullName) != null) != null).ToList();
+            IList<Assembly> assemblys = AppDomain.CurrentDomain.GetAssemblies();
             string path = System.AppDomain.CurrentDomain.BaseDirectory;
             DirectoryInfo dir = new DirectoryInfo(path);
             foreach (FileInfo fileInfo in dir.GetFiles())
@@ -78,8 +74,8 @@ namespace Dapper.Extensions
                     }
                 }
             }
-            _mapperAssemblies = assemblys;
-            return assemblys;
+            _mapperAssemblies = assemblys.Where(assembly => assembly.FullName != typeof(IClassMapper<>).Assembly.FullName && assembly.GetTypes().FirstOrDefault(m => m != null && m.GetInterface(typeof(IClassMapper<>).FullName) != null) != null).ToList();
+            return _mapperAssemblies;
         }
 
         private static Type CreateMapperType(Type entityType)
