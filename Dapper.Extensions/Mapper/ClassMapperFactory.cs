@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 
@@ -39,6 +41,43 @@ namespace Dapper.Extensions
             if (_mapperAssemblies != null)
                 return _mapperAssemblies;
             IList<Assembly> assemblys = AppDomain.CurrentDomain.GetAssemblies().Where(assembly => assembly.FullName != typeof(IClassMapper<>).Assembly.FullName && assembly.GetTypes().FirstOrDefault(m => m != null && m.GetInterface(typeof(IClassMapper<>).FullName) != null) != null).ToList();
+            string path = System.AppDomain.CurrentDomain.BaseDirectory;
+            DirectoryInfo dir = new DirectoryInfo(path);
+            foreach (FileInfo fileInfo in dir.GetFiles())
+            {
+                if (fileInfo == null || fileInfo.Extension != ".dll")
+                    continue;
+                try
+                {
+                    Assembly assembly = Assembly.LoadFile(fileInfo.FullName);
+                    if (assembly == null || assemblys.Contains(assembly))
+                        continue;
+                    assemblys.Add(assembly);
+                }
+                catch
+                {
+                    // ignored
+                }
+            }
+            string nameList = ConfigurationManager.AppSettings["MapperAssemblies"];
+            if (!string.IsNullOrWhiteSpace(nameList))
+            {
+                string[] arrays = nameList.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+                foreach (string name in arrays)
+                {
+                    try
+                    {
+                        Assembly assembly = Assembly.Load(name);
+                        if (assembly == null || assemblys.Contains(assembly))
+                            continue;
+                        assemblys.Add(assembly);
+                    }
+                    catch
+                    {
+                        // ignored
+                    }
+                }
+            }
             _mapperAssemblies = assemblys;
             return assemblys;
         }
