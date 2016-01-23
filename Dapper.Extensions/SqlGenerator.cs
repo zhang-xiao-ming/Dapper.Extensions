@@ -217,11 +217,11 @@ namespace Dapper.Extensions
             return result;
         }
 
-        public virtual SqlConvertResult Select(IClassMapper classMapper, int firstResult, int maxResults, string condition,string orderBy, IDictionary<string, object> parameters)
+        public virtual SqlConvertResult Select(IClassMapper classMapper, int firstResult, int maxResults, string condition, string orderBy, IDictionary<string, object> parameters)
         {
             if (parameters == null)
                 parameters = new Dictionary<string, object>();
-            SqlConvertResult sqlConvertResult = Select(classMapper, condition, orderBy,null);
+            SqlConvertResult sqlConvertResult = Select(classMapper, condition, orderBy, null);
             string sql = DbProvider.GetLimitOffsetSql(sqlConvertResult.Sql, firstResult, maxResults, parameters);
             sqlConvertResult = SqlConvert(classMapper, sql, parameters);
             return sqlConvertResult;

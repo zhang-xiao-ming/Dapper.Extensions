@@ -223,7 +223,7 @@ namespace Dapper.Extensions
         {
             IClassMapper classMapper = ClassMapperFactory.GetMapper<T>(tableName);
             KeyConditionResult keyConditionResult = SqlGenerator.GetKeyConditionById(classMapper, id);
-            SqlConvertResult sqlConvertResult = SqlGenerator.Select(classMapper, keyConditionResult.Sql,null, keyConditionResult.Parameters, false);
+            SqlConvertResult sqlConvertResult = SqlGenerator.Select(classMapper, keyConditionResult.Sql, null, keyConditionResult.Parameters, false);
             T result = DbConnection.Query<T>(sqlConvertResult.Sql, sqlConvertResult.Parameters, DbTransaction, true, commandTimeout, CommandType.Text).SingleOrDefault();
             if (result == null) return null;
             IPropertyMap persistedMap = classMapper.GetPersistedMap();
@@ -245,32 +245,32 @@ namespace Dapper.Extensions
         {
             return List<T>(null, condition, parameters, commandTimeout);
         }
-        public IList<T> List<T>(string tableName, string condition,IDictionary<string, object> parameters, int? commandTimeout = null) where T : class
+        public IList<T> List<T>(string tableName, string condition, IDictionary<string, object> parameters, int? commandTimeout = null) where T : class
         {
             IClassMapper classMapper = ClassMapperFactory.GetMapper<T>(tableName);
-            SqlConvertResult sqlConvertResult = SqlGenerator.Select(classMapper, condition, null,parameters);
+            SqlConvertResult sqlConvertResult = SqlGenerator.Select(classMapper, condition, null, parameters);
             return DbConnection.Query<T>(sqlConvertResult.Sql, sqlConvertResult.Parameters, DbTransaction, true, commandTimeout, CommandType.Text).ToList();
         }
 
         public IList<T> List<T>(string tableName, string condition, object parameters, int? commandTimeout = null) where T : class
         {
             IDictionary<string, object> paramValues = ReflectionHelper.GetObjectValues(parameters);
-            return List<T>(tableName, condition,paramValues, commandTimeout);
+            return List<T>(tableName, condition, paramValues, commandTimeout);
         }
 
         public IList<T> List<T>(string condition, object parameters, int? commandTimeout = null) where T : class
         {
-            return List<T>(null, condition,parameters, commandTimeout);
+            return List<T>(null, condition, parameters, commandTimeout);
         }
 
         public IList<T> List<T>(string condition, string orderBy, IDictionary<string, object> parameters, int firstResult, int maxResults, int? commandTimeout = null) where T : class
         {
-            return List<T>(null, condition,orderBy, parameters, firstResult,maxResults, commandTimeout);
+            return List<T>(null, condition, orderBy, parameters, firstResult, maxResults, commandTimeout);
         }
-        public IList<T> List<T>(string tableName, string condition, string orderBy,IDictionary<string, object> parameters, int firstResult, int maxResults, int? commandTimeout = null) where T : class
+        public IList<T> List<T>(string tableName, string condition, string orderBy, IDictionary<string, object> parameters, int firstResult, int maxResults, int? commandTimeout = null) where T : class
         {
             IClassMapper classMapper = ClassMapperFactory.GetMapper<T>(tableName);
-            SqlConvertResult sqlConvertResult = SqlGenerator.Select(classMapper, firstResult, maxResults, condition,orderBy, parameters);
+            SqlConvertResult sqlConvertResult = SqlGenerator.Select(classMapper, firstResult, maxResults, condition, orderBy, parameters);
             return DbConnection.Query<T>(sqlConvertResult.Sql, sqlConvertResult.Parameters, DbTransaction, true, commandTimeout, CommandType.Text).ToList();
         }
 
@@ -282,7 +282,7 @@ namespace Dapper.Extensions
 
         public IList<T> List<T>(string condition, string orderBy, object parameters, int firstResult, int maxResults, int? commandTimeout = null) where T : class
         {
-            return List<T>(null, condition, orderBy,parameters, firstResult, maxResults, commandTimeout);
+            return List<T>(null, condition, orderBy, parameters, firstResult, maxResults, commandTimeout);
         }
 
         public int Count<T>(string condition, IDictionary<string, object> parameters, int? commandTimeout = null) where T : class
@@ -315,15 +315,15 @@ namespace Dapper.Extensions
 
         public PagingResult<T> Paging<T>(string tableName, string condition, string orderBy, IDictionary<string, object> parameters, int pageIndex, int pageSize, int? commandTimeout = null) where T : class
         {
-            int startValue = (pageIndex-1) * pageSize;
+            int startValue = (pageIndex - 1) * pageSize;
             int totalRecords = Count<T>(tableName, condition, parameters, commandTimeout);
             int totalPages = (int)Math.Ceiling((double)totalRecords / pageSize);
-            IList<T> list = List<T>(tableName, condition, orderBy,parameters, startValue, pageSize, commandTimeout);
+            IList<T> list = List<T>(tableName, condition, orderBy, parameters, startValue, pageSize, commandTimeout);
             PagingResult<T> result = new PagingResult<T>
             {
                 List = list,
                 TotalRecords = totalRecords,
-                TotalPages= totalPages
+                TotalPages = totalPages
             };
             return result;
         }

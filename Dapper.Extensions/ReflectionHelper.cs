@@ -34,7 +34,7 @@ namespace Dapper.Extensions
         public static MemberInfo GetProperty(LambdaExpression lambda)
         {
             Expression expr = lambda;
-            for (; ; )
+            for (;;)
             {
                 switch (expr.NodeType)
                 {

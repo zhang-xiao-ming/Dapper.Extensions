@@ -31,7 +31,7 @@ namespace Dapper.Extensions
         {
             return GetMapper(typeof(T), tableName) as IClassMapper<T>;
         }
-        
+
         private static IEnumerable<Assembly> GetMapperAssemblies()
         {
             if (_mapperAssemblies != null)

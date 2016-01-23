@@ -3,17 +3,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using NUnit.Framework;
 using DomainModel;
 using System.Data;
 using System.Globalization;
-
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Dapper.Extensions.UnitTest
 {
-    [TestFixture]
+
+    [TestClass]
     public class DapperExtensionsTests
     {
-        [Test]
+        [TestMethod]
         public void TestMethod1()
         {
             using (IDbContext db = new DbContext())
@@ -47,10 +47,10 @@ namespace Dapper.Extensions.UnitTest
             }
         }
 
-        [Test]
+        [TestMethod]
         public void TestMethod2()
         {
-            
+
             using (IDbContext db = new DbContext())
             {
                 string tableName = db.SqlGenerator.DbProvider.QuoteString("User");
@@ -72,21 +72,21 @@ namespace Dapper.Extensions.UnitTest
                 }
 
                 Dictionary<string, object> dic = new Dictionary<string, object> { { "Age", -1 } };
-                IList<UserEntity> list  = db.List<UserEntity>("User", "Age>@Age","RoleId ASC", dic, 0, 5);
-                Assert.NotNull(list);
+                IList<UserEntity> list = db.List<UserEntity>("User", "Age>@Age", "RoleId ASC", dic, 0, 5);
+                Assert.IsNotNull(list);
                 Assert.AreEqual(5, list.Count);
                 Assert.AreEqual(0, list[0].Age);
                 Assert.AreEqual(4, list[4].Age);
                 list = db.List<UserEntity>("User", "Age>@Age Order By RoleId ASC", dic);
-                Assert.NotNull(list);
+                Assert.IsNotNull(list);
                 Assert.AreEqual(10, list.Count);
                 Assert.AreEqual(0, list[0].Age);
                 Assert.AreEqual(9, list[9].Age);
             }
-           
+
         }
 
-        [Test]
+        [TestMethod]
         public void TestMethod3()
         {
             using (IDbContext db = new DbContext())
@@ -95,8 +95,8 @@ namespace Dapper.Extensions.UnitTest
                 int result1 = db.Execute("delete from " + tableName);
                 Assert.IsTrue(result1 >= 0);
                 PagingResult<UserEntity> result2 = db.Paging<UserEntity>("", "", null, 1, 3);
-                Assert.NotNull(result2);
-                Assert.NotNull(result2.List);
+                Assert.IsNotNull(result2);
+                Assert.IsNotNull(result2.List);
                 Assert.AreEqual(0, result2.List.Count);
                 Assert.AreEqual(0, result2.TotalPages);
                 Assert.AreEqual(0, result2.TotalRecords);
@@ -115,16 +115,16 @@ namespace Dapper.Extensions.UnitTest
                     Assert.IsTrue(flag3);
                 }
                 result2 = db.Paging<UserEntity>("", "RoleId asc", null, 1, 3);
-                Assert.NotNull(result2);
-                Assert.NotNull(result2.List);
+                Assert.IsNotNull(result2);
+                Assert.IsNotNull(result2.List);
                 Assert.AreEqual(3, result2.List.Count);
                 Assert.AreEqual(4, result2.TotalPages);
                 Assert.AreEqual(10, result2.TotalRecords);
                 for (int i = 1; i <= result2.TotalPages; i++)
                 {
                     result2 = db.Paging<UserEntity>("", "RoleId asc", null, i, 3);
-                    Assert.NotNull(result2);
-                    Assert.NotNull(result2.List);
+                    Assert.IsNotNull(result2);
+                    Assert.IsNotNull(result2.List);
                     if (i == 4)
                     {
                         Assert.AreEqual(1, result2.List.Count);
@@ -138,7 +138,7 @@ namespace Dapper.Extensions.UnitTest
             }
         }
 
-        [Test]
+        [TestMethod]
         public void TestMethod4()
         {
             using (IDbContext db = new DbContext())
@@ -149,7 +149,7 @@ namespace Dapper.Extensions.UnitTest
                 Assert.IsTrue(entity.Id > 0);
 
                 IdentityKey result = db.Get<IdentityKey>(entity.Id);
-                Assert.NotNull(result);
+                Assert.IsNotNull(result);
                 Assert.AreEqual(entity.Value, result.Value);
 
                 bool flag2 = db.Delete<IdentityKey>(entity);
@@ -159,7 +159,7 @@ namespace Dapper.Extensions.UnitTest
             }
         }
 
-        [Test]
+        [TestMethod]
         public void TestMethod5()
         {
             using (IDbContext db = new DbContext())
@@ -174,7 +174,7 @@ namespace Dapper.Extensions.UnitTest
                 Assert.IsTrue(flag);
 
                 Multikey result = db.Get<Multikey>(new { Key1 = entity.Key1, Key2 = entity.Key2 });
-                Assert.NotNull(result);
+                Assert.IsNotNull(result);
                 Assert.AreEqual(entity.Value, result.Value);
 
                 bool flag2 = db.Delete<Multikey>(new { Key1 = entity.Key1, Key2 = entity.Key2 });
@@ -184,7 +184,7 @@ namespace Dapper.Extensions.UnitTest
             }
         }
 
-        [Test]
+        [TestMethod]
         public void TestMethod6()
         {
             using (IDbContext db = new DbContext())
@@ -208,7 +208,7 @@ namespace Dapper.Extensions.UnitTest
                 Assert.IsTrue(flag);
 
                 DataType result = db.Get<DataType>(entity.Id);
-                Assert.NotNull(result);
+                Assert.IsNotNull(result);
                 Assert.AreEqual(entity.Id, result.Id);
                 Assert.AreEqual(entity.TInt, result.TInt);
                 Assert.AreEqual(entity.TLong, result.TLong);
@@ -218,13 +218,13 @@ namespace Dapper.Extensions.UnitTest
                 Assert.AreEqual(entity.TBool, result.TBool);
                 Assert.AreEqual(entity.TDateTime.ToString(CultureInfo.InvariantCulture), result.TDateTime.ToString(CultureInfo.InvariantCulture));
                 Assert.AreEqual(entity.TString, result.TString);
-                Assert.AreEqual(entity.TBypes, result.TBypes);
+                Assert.AreEqual(0, MemoryCompare(entity.TBypes, result.TBypes));
                 Assert.AreEqual(entity.TEnum, result.TEnum);
                 Assert.AreEqual(entity.TSingle, result.TSingle);
             }
         }
 
-        [Test]
+        [TestMethod]
         public void TestMethod7()
         {
             using (IDbContext db = new DbContext())
@@ -234,7 +234,7 @@ namespace Dapper.Extensions.UnitTest
                 Assert.IsTrue(flag);
 
                 NullableDataType result = db.Get<NullableDataType>(entity.Id);
-                Assert.NotNull(result);
+                Assert.IsNotNull(result);
                 Assert.AreEqual(entity.Id, result.Id);
                 Assert.AreEqual(entity.TInt, result.TInt);
                 Assert.AreEqual(entity.TLong, result.TLong);
@@ -244,14 +244,14 @@ namespace Dapper.Extensions.UnitTest
                 Assert.AreEqual(entity.TBool, result.TBool);
                 Assert.AreEqual(entity.TDateTime.ToString(), result.TDateTime.ToString());
                 Assert.AreEqual(entity.TString, result.TString);
-                Assert.AreEqual(entity.TBypes, result.TBypes);
+                Assert.AreEqual(0, MemoryCompare(entity.TBypes, result.TBypes));
                 Assert.AreEqual(entity.TEnum, result.TEnum);
                 Assert.AreEqual(entity.TSingle, result.TSingle);
 
             }
         }
 
-        [Test]
+        [TestMethod]
         public void TestMethod8()
         {
             using (IDbContext db = new DbContext())
@@ -267,7 +267,7 @@ namespace Dapper.Extensions.UnitTest
                 Assert.IsTrue(flag);
 
                 Alias result = db.Get<Alias>(entity.Id);
-                Assert.NotNull(result);
+                Assert.IsNotNull(result);
                 Assert.AreEqual(entity.Id, result.Id);
                 Assert.AreEqual(entity.Name, result.Name);
                 Assert.AreEqual(entity.Age, result.Age);
@@ -275,12 +275,12 @@ namespace Dapper.Extensions.UnitTest
                 //IDictionary<string, object> parameters = new Dictionary<string, object>();
                 //parameters.Add("Name", "tom");
                 IList<Alias> list = db.List<Alias>("#Name=@Name", new { Name = "tom" });
-                Assert.NotNull(list);
+                Assert.IsNotNull(list);
             }
         }
 
 
-        [Test]
+        [TestMethod]
         public void TestMethod9()
         {
             string id = Guid.NewGuid().ToString();
@@ -325,16 +325,16 @@ namespace Dapper.Extensions.UnitTest
             using (IDbContext db = new DbContext())
             {
                 Alias getAlias = db.Get<Alias>(id);
-                Assert.NotNull(getAlias);
+                Assert.IsNotNull(getAlias);
 
                 DataType getDataType = db.Get<DataType>(id);
-                Assert.Null(getDataType);
+                Assert.IsNull(getDataType);
             }
 
         }
 
 
-        [Test]
+        [TestMethod]
         public void TestMethod10()
         {
             string id = Guid.NewGuid().ToString();
@@ -380,14 +380,14 @@ namespace Dapper.Extensions.UnitTest
             using (IDbContext db = new DbContext())
             {
                 Alias getAlias = db.Get<Alias>(id);
-                Assert.Null(getAlias);
+                Assert.IsNull(getAlias);
 
                 DataType getDataType = db.Get<DataType>(id);
-                Assert.Null(getDataType);
+                Assert.IsNull(getDataType);
             }
         }
 
-        [Test]
+        [TestMethod]
         public void TestMethod11()
         {
             string id = Guid.NewGuid().ToString();
@@ -433,14 +433,14 @@ namespace Dapper.Extensions.UnitTest
             using (IDbContext db = new DbContext())
             {
                 Alias getAlias = db.Get<Alias>(id);
-                Assert.NotNull(getAlias);
+                Assert.IsNotNull(getAlias);
 
                 DataType getDataType = db.Get<DataType>(id);
-                Assert.NotNull(getDataType);
+                Assert.IsNotNull(getDataType);
             }
         }
 
-        [Test]
+        [TestMethod]
 
         public void TestMethod12()
         {
@@ -458,7 +458,7 @@ namespace Dapper.Extensions.UnitTest
                 Assert.IsTrue(flag1);
 
                 DataTable dt = db.GetDataTable("select * from [User]");
-                Assert.NotNull(dt);
+                Assert.IsNotNull(dt);
                 foreach (DataRow dr in dt.Rows)
                 {
                     string id = dr.GetValue<string>("Id");
@@ -467,7 +467,7 @@ namespace Dapper.Extensions.UnitTest
             }
         }
 
-        [Test]
+        [TestMethod]
         public void TestMethod13()
         {
             using (IDbContext db = new DbContext())
@@ -482,20 +482,20 @@ namespace Dapper.Extensions.UnitTest
                 Assert.IsTrue(flag1);
 
                 RoleEntity entity2 = db.Get<RoleEntity>(entity1.Id);
-                Assert.NotNull(entity2);
+                Assert.IsNotNull(entity2);
                 entity2.Name = "tom";
                 entity2.LastModifyTime = DateTime.Now;
                 bool flag2 = db.Update<RoleEntity>(entity2);
                 Assert.IsTrue(flag2);
 
                 RoleEntity entity3 = db.Get<RoleEntity>(entity1.Id);
-                Assert.NotNull(entity3);
+                Assert.IsNotNull(entity3);
                 Assert.AreEqual(entity2.Name, entity3.Name);
                 Assert.AreEqual(entity1.Version + 1, entity3.Version);
             }
         }
 
-        [Test]
+        [TestMethod]
         public void TestMethod14()
         {
             using (IDbContext db = new DbContext())
@@ -507,7 +507,7 @@ namespace Dapper.Extensions.UnitTest
             }
         }
 
-        [Test]
+        [TestMethod]
         public void TestMethod15()
         {
             using (IDbContext db = new DbContext())
@@ -519,11 +519,11 @@ namespace Dapper.Extensions.UnitTest
                 DynamicParameters parameter = new DynamicParameters();
                 parameter.Add("Id", entity.Id);
                 IdentityKey result = db.Query<IdentityKey>("IdentityKey_Select_Single", parameter, true, null, CommandType.StoredProcedure).FirstOrDefault();
-                Assert.NotNull(result);
+                Assert.IsNotNull(result);
             }
         }
 
-        [Test]
+        [TestMethod]
         public void TestMethod16()
         {
             using (IDbContext db = new DbContext())
@@ -552,14 +552,14 @@ namespace Dapper.Extensions.UnitTest
                 parameter.Add("RoleId", entity1.Id);
                 parameter.Add("TotalRecords", null, DbType.Int32, ParameterDirection.Output);
                 IList<UserEntity> result = db.Query<UserEntity>("User_Select_ResultValue", parameter, true, null, CommandType.StoredProcedure);
-                Assert.NotNull(result);
+                Assert.IsNotNull(result);
                 Assert.IsTrue(result.Count >= 1);
                 int totalRecords = parameter.Get<int>("TotalRecords");
             }
         }
 
-        [Test]
-        [ExpectedException]
+        [TestMethod]
+        [ExpectedException(typeof(Exception))]
         public void TestMethod17()
         {
             using (IDbContext db = new DbContext())
@@ -571,7 +571,7 @@ namespace Dapper.Extensions.UnitTest
             }
         }
 
-        [Test]
+        [TestMethod]
         public void TestMethod18()
         {
             using (IDbContext db = new DbContext())
@@ -586,7 +586,7 @@ namespace Dapper.Extensions.UnitTest
                 Assert.IsTrue(flag1);
 
                 RoleEntity entity2 = db.Get<RoleEntity>(entity1.Id);
-                Assert.NotNull(entity2);
+                Assert.IsNotNull(entity2);
                 Assert.AreEqual(true, entity2.IsPersisted);
                 entity2.Name = "tom";
                 entity2.LastModifyTime = DateTime.Now;
@@ -594,7 +594,7 @@ namespace Dapper.Extensions.UnitTest
                 Assert.IsTrue(flag2);
 
                 RoleEntity entity3 = db.Get<RoleEntity>(entity1.Id);
-                Assert.NotNull(entity3);
+                Assert.IsNotNull(entity3);
                 Assert.AreEqual(true, entity3.IsPersisted);
                 Assert.AreEqual(entity2.Name, entity3.Name);
                 Assert.AreEqual(entity1.Version + 1, entity3.Version);
@@ -602,7 +602,7 @@ namespace Dapper.Extensions.UnitTest
         }
 
 
-        [Test]
+        [TestMethod]
         public void TestMethod19()
         {
 
@@ -623,6 +623,33 @@ namespace Dapper.Extensions.UnitTest
                 bool flag = db.Insert<RoleEntity>(entities);
                 Assert.IsTrue(flag);
             }
+        }
+
+        /// <summary>
+        /// 比较字节数组
+        /// </summary>
+        /// <param name="b1">字节数组1</param>
+        /// <param name="b2">字节数组2</param>
+        /// <returns>如果两个数组相同，返回0；如果数组1小于数组2，返回小于0的值；如果数组1大于数组2，返回大于0的值。</returns>
+        private int MemoryCompare(byte[] b1, byte[] b2)
+        {
+            int result = 0;
+            if (b1 == null && b2 == null)
+                return result;
+            if (b1.Length != b2.Length)
+                result = b1.Length - b2.Length;
+            else
+            {
+                for (int i = 0; i < b1.Length; i++)
+                {
+                    if (b1[i] != b2[i])
+                    {
+                        result = (int)(b1[i] - b2[i]);
+                        break;
+                    }
+                }
+            }
+            return result;
         }
     }
 }
