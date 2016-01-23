@@ -23,21 +23,21 @@ namespace Dapper.Extensions
 
         bool Delete<T>(object id, string tableName = null, int? commandTimeout = null) where T : class;
 
-        IList<T> List<T>(string condition, IDictionary<string, object> parameters, int? commandTimeout = null) where T : class;
+        IList<T> List<T>(string condition, Dictionary<string, object> parameters, int? commandTimeout = null) where T : class;
         IList<T> List<T>(string tableName, string condition, IDictionary<string, object> parameters, int? commandTimeout = null) where T : class;
         IList<T> List<T>(string tableName, string condition, object parameters, int? commandTimeout = null) where T : class;
         IList<T> List<T>(string condition, object parameters, int? commandTimeout = null) where T : class;
 
-        IList<T> List<T>(string condition, IDictionary<string, object> parameters, int firstResult, int maxResults, int? commandTimeout = null) where T : class;
-        IList<T> List<T>(string tableName, string condition, IDictionary<string, object> parameters, int firstResult, int maxResults, int? commandTimeout = null) where T : class;
-        IList<T> List<T>(string tableName, string condition, object parameters, int firstResult, int maxResults, int? commandTimeout = null) where T : class;
-        IList<T> List<T>(string condition, object parameters, int firstResult, int maxResults, int? commandTimeout = null) where T : class;
+        IList<T> List<T>(string condition, string orderBy,IDictionary<string, object> parameters, int firstResult, int maxResults, int? commandTimeout = null) where T : class;
+        IList<T> List<T>(string tableName, string condition, string orderBy, IDictionary<string, object> parameters, int firstResult, int maxResults, int? commandTimeout = null) where T : class;
+        IList<T> List<T>(string tableName, string condition, string orderBy,object parameters, int firstResult, int maxResults, int? commandTimeout = null) where T : class;
+        IList<T> List<T>(string condition, string orderBy,object parameters, int firstResult, int maxResults, int? commandTimeout = null) where T : class;
         int Count<T>(string condition, IDictionary<string, object> parameters, int? commandTimeout = null) where T : class;
         int Count<T>(string tableName, string condition, IDictionary<string, object> parameters, int? commandTimeout = null) where T : class;
 
 
-        PagingResult<T> Paging<T>(string condition, IDictionary<string, object> parameters, int pageIndex, int pageSize, int? commandTimeout = null) where T : class;
-        PagingResult<T> Paging<T>(string tableName, string condition, IDictionary<string, object> parameters, int pageIndex, int pageSize, int? commandTimeout = null) where T : class;
+        PagingResult<T> Paging<T>(string condition, string orderBy, IDictionary<string, object> parameters, int pageIndex, int pageSize, int? commandTimeout = null) where T : class;
+        PagingResult<T> Paging<T>(string tableName, string condition, string orderBy,IDictionary<string, object> parameters, int pageIndex, int pageSize, int? commandTimeout = null) where T : class;
 
         void Commit();
 

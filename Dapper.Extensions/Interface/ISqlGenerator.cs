@@ -16,8 +16,8 @@ namespace Dapper.Extensions
         string GetTableName(IClassMapper classMapper);
         string IdentitySql(IClassMapper classMapper);
         SqlConvertResult Insert(IClassMapper classMapper, IDictionary<string, object> parameters);
-        SqlConvertResult Select(IClassMapper classMapper, string condition, IDictionary<string, object> parameters, bool hasNoLock = true);
-        SqlConvertResult Select(IClassMapper classMapper, int firstResult, int maxResults, string condition, IDictionary<string, object> parameters);
+        SqlConvertResult Select(IClassMapper classMapper, string condition,string orderBy, IDictionary<string, object> parameters, bool hasNoLock = true);
+        SqlConvertResult Select(IClassMapper classMapper, int firstResult, int maxResults, string condition, string orderBy, IDictionary<string, object> parameters);
         SqlConvertResult SqlConvert(IClassMapper classMapper, string sql, IDictionary<string, object> parameters);
 
         string SqlConvert(IClassMapper classMapper, string sql);

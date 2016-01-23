@@ -48,7 +48,7 @@ namespace Dapper.Extensions
                     string.Format("ROW_NUMBER() OVER(ORDER BY {0}) AS {1}, ", orderByClause.Substring(9),
                         GetColumnName(null, "_row_number", null)));
 
-            string result = string.Format("SELECT TOP({0}) {1} FROM ({2}) [_proj] WHERE {3} >= @_pageStartRow ORDER BY {3}",
+            string result = string.Format("SELECT TOP({0}) {1} FROM ({2}) [_proj] WHERE {3} > @_pageStartRow ORDER BY {3}",
                 maxResults, projectedColumns.Trim(), newSql, GetColumnName("_proj", "_row_number", null));
 
             parameters.Add("_pageStartRow", firstResult);

@@ -50,13 +50,40 @@ namespace Dapper.Extensions.UnitTest
         [Test]
         public void TestMethod2()
         {
-            IList<UserEntity> list = null;
+            
             using (IDbContext db = new DbContext())
             {
+                string tableName = db.SqlGenerator.DbProvider.QuoteString("User");
+                int result1 = db.Execute("delete from " + tableName);
+                Assert.IsTrue(result1 >= 0);
+                for (int i = 0; i < 10; i++)
+                {
+                    UserEntity user = new UserEntity
+                    {
+                        Age = i,
+                        CreatedTime = DateTime.Now,
+                        Id = Guid.NewGuid().ToString("N"),
+                        LastModifyTime = DateTime.Now,
+                        Name = "Name" + i,
+                        RoleId = i
+                    };
+                    bool flag3 = db.Insert(user);
+                    Assert.IsTrue(flag3);
+                }
+
                 Dictionary<string, object> dic = new Dictionary<string, object> { { "Age", -1 } };
-                list = db.List<UserEntity>("User", "Age>@Age", dic, 0, 10);
+                IList<UserEntity> list  = db.List<UserEntity>("User", "Age>@Age","RoleId ASC", dic, 0, 5);
+                Assert.NotNull(list);
+                Assert.AreEqual(5, list.Count);
+                Assert.AreEqual(0, list[0].Age);
+                Assert.AreEqual(4, list[4].Age);
+                list = db.List<UserEntity>("User", "Age>@Age Order By RoleId ASC", dic);
+                Assert.NotNull(list);
+                Assert.AreEqual(10, list.Count);
+                Assert.AreEqual(0, list[0].Age);
+                Assert.AreEqual(9, list[9].Age);
             }
-            Assert.NotNull(list);
+           
         }
 
         [Test]
@@ -64,8 +91,50 @@ namespace Dapper.Extensions.UnitTest
         {
             using (IDbContext db = new DbContext())
             {
-                PagingResult<UserEntity> result = db.Paging<UserEntity>("User", "", null, 1, 3);
-                Assert.NotNull(result);
+                string tableName = db.SqlGenerator.DbProvider.QuoteString("User");
+                int result1 = db.Execute("delete from " + tableName);
+                Assert.IsTrue(result1 >= 0);
+                PagingResult<UserEntity> result2 = db.Paging<UserEntity>("", "", null, 1, 3);
+                Assert.NotNull(result2);
+                Assert.NotNull(result2.List);
+                Assert.AreEqual(0, result2.List.Count);
+                Assert.AreEqual(0, result2.TotalPages);
+                Assert.AreEqual(0, result2.TotalRecords);
+                for (int i = 0; i < 10; i++)
+                {
+                    UserEntity user = new UserEntity
+                    {
+                        Age = 10,
+                        CreatedTime = DateTime.Now,
+                        Id = Guid.NewGuid().ToString("N"),
+                        LastModifyTime = DateTime.Now,
+                        Name = "Name" + i,
+                        RoleId = i
+                    };
+                    bool flag3 = db.Insert(user);
+                    Assert.IsTrue(flag3);
+                }
+                result2 = db.Paging<UserEntity>("", "RoleId asc", null, 1, 3);
+                Assert.NotNull(result2);
+                Assert.NotNull(result2.List);
+                Assert.AreEqual(3, result2.List.Count);
+                Assert.AreEqual(4, result2.TotalPages);
+                Assert.AreEqual(10, result2.TotalRecords);
+                for (int i = 1; i <= result2.TotalPages; i++)
+                {
+                    result2 = db.Paging<UserEntity>("", "RoleId asc", null, i, 3);
+                    Assert.NotNull(result2);
+                    Assert.NotNull(result2.List);
+                    if (i == 4)
+                    {
+                        Assert.AreEqual(1, result2.List.Count);
+                        Assert.AreEqual(9, result2.List[0].RoleId);
+                    }
+                    else
+                    {
+                        Assert.AreEqual(3, result2.List.Count);
+                    }
+                }
             }
         }
 
