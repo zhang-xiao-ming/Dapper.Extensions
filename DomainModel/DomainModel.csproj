@@ -47,6 +47,8 @@
     <Compile Include="IdentityKey.cs" />
     <Compile Include="Multikey.cs" />
     <Compile Include="NullableDataType.cs" />
+    <Compile Include="Properties\Annotations.cs" />
+    <Compile Include="PropertyChangedModel.cs" />
     <Compile Include="RoleEntity.cs" />
     <Compile Include="DataType.cs" />
     <Compile Include="UserEntity.cs" />

@@ -19,21 +19,21 @@ namespace Dapper.Extensions
             return "SELECT LAST_INSERT_ROWID() AS [Id]";
         }
 
-        public override string GetLimitOffsetSql(string sql, int firstResult, int maxResults, IDictionary<string, object> parameters)
+        public override string GetLimitOffsetSql(string sql, int firstResult, int maxResults, DynamicParameters dynamicParameters)
         {
             if (string.IsNullOrEmpty(sql))
             {
                 throw new ArgumentNullException("sql");
             }
 
-            if (parameters == null)
+            if (dynamicParameters == null)
             {
-                throw new ArgumentNullException("parameters");
+                throw new ArgumentNullException("dynamicParameters");
             }
 
             var result = string.Format("{0} LIMIT @_Offset, @_Count", sql);
-            parameters.Add("_Offset", firstResult);
-            parameters.Add("_Count", maxResults);
+            dynamicParameters.Add("_Offset", firstResult);
+            dynamicParameters.Add("_Count", maxResults);
             return result;
         }
 

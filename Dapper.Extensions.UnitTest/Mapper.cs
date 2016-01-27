@@ -73,4 +73,15 @@ namespace Dapper.Extensions.UnitTest
             AutoMap();
         }
     }
+
+    public sealed class PropertyChangedModelMapper : ClassMapper<PropertyChangedModel>
+    {
+        public PropertyChangedModelMapper()
+        {
+            TableName = "PropertyChangedModel";
+            MapProperty(p => p.Id).Key(KeyType.Assigned);
+            MapProperty(p => p.PropertyChangedList).PropertyChangedList();
+            AutoMap();
+        }
+    }
 }

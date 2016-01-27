@@ -69,7 +69,13 @@ CREATE TABLE `User` (
   PRIMARY KEY (`Id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-
+DROP TABLE IF EXISTS `PropertyChangedModel`;
+CREATE TABLE `PropertyChangedModel` (
+  `Id` varchar(50) NOT NULL,
+  `Name` varchar(50) DEFAULT NULL,
+  `Age` int(11) DEFAULT NULL,
+  PRIMARY KEY (`Id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 DROP PROCEDURE IF EXISTS `IdentityKey_Insert`;
 DELIMITER ;;

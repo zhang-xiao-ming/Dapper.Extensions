@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Reflection;
 
 namespace Dapper.Extensions
@@ -29,6 +31,8 @@ namespace Dapper.Extensions
         public bool IsReadOnly { get; private set; }
 
         public bool IsPersisted { get; private set; }
+
+        public bool IsPropertyChangedList { get; private set; }
 
         public PropertyInfo PropertyInfo { get; private set; }
 
@@ -102,6 +106,21 @@ namespace Dapper.Extensions
             }
 
             IsReadOnly = true;
+            return this;
+        }
+
+        public PropertyMap PropertyChangedList()
+        {
+            if (KeyType != KeyType.NotAKey)
+            {
+                throw new ArgumentException(string.Format("'{0}' 是一个主键字段不能被作为一个原始值字典属性。", Name));
+            }
+            if (!PropertyInfo.PropertyType.Equals(typeof(IList<string>)))
+            {
+                throw new ArgumentException(string.Format("'{0}' 的类型必须是IList<string>型。", Name));
+            }
+            IsIgnored = true;
+            IsPropertyChangedList = true;
             return this;
         }
     }

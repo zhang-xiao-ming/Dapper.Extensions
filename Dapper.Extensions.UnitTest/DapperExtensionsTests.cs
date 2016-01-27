@@ -50,7 +50,6 @@ namespace Dapper.Extensions.UnitTest
         [TestMethod]
         public void TestMethod2()
         {
-
             using (IDbContext db = new DbContext())
             {
                 string tableName = db.SqlGenerator.DbProvider.QuoteString("User");
@@ -94,7 +93,7 @@ namespace Dapper.Extensions.UnitTest
                 string tableName = db.SqlGenerator.DbProvider.QuoteString("User");
                 int result1 = db.Execute("delete from " + tableName);
                 Assert.IsTrue(result1 >= 0);
-                PagingResult<UserEntity> result2 = db.Paging<UserEntity>("", "", null, 1, 3);
+                PagingResult<UserEntity> result2 = db.Paging<UserEntity>("", "", (DynamicParameters)null, 1, 3);
                 Assert.IsNotNull(result2);
                 Assert.IsNotNull(result2.List);
                 Assert.AreEqual(0, result2.List.Count);
@@ -114,7 +113,7 @@ namespace Dapper.Extensions.UnitTest
                     bool flag3 = db.Insert(user);
                     Assert.IsTrue(flag3);
                 }
-                result2 = db.Paging<UserEntity>("", "RoleId asc", null, 1, 3);
+                result2 = db.Paging<UserEntity>("", "RoleId asc", (DynamicParameters)null, 1, 3);
                 Assert.IsNotNull(result2);
                 Assert.IsNotNull(result2.List);
                 Assert.AreEqual(3, result2.List.Count);
@@ -122,7 +121,7 @@ namespace Dapper.Extensions.UnitTest
                 Assert.AreEqual(10, result2.TotalRecords);
                 for (int i = 1; i <= result2.TotalPages; i++)
                 {
-                    result2 = db.Paging<UserEntity>("", "RoleId asc", null, i, 3);
+                    result2 = db.Paging<UserEntity>("", "RoleId asc", (DynamicParameters)null, i, 3);
                     Assert.IsNotNull(result2);
                     Assert.IsNotNull(result2.List);
                     if (i == 4)
@@ -272,13 +271,21 @@ namespace Dapper.Extensions.UnitTest
                 Assert.AreEqual(entity.Name, result.Name);
                 Assert.AreEqual(entity.Age, result.Age);
                 Assert.AreEqual(entity.CreatedTime.ToString(CultureInfo.InvariantCulture), result.CreatedTime.ToString(CultureInfo.InvariantCulture));
+                //参数的写法1
                 //IDictionary<string, object> parameters = new Dictionary<string, object>();
                 //parameters.Add("Name", "tom");
-                IList<Alias> list = db.List<Alias>("#Name=@Name", new { Name = "tom" });
+                //IList<Alias> list = db.List<Alias>("#Name=@Name", parameters);
+                //参数的写法2
+                //IList<Alias> list = db.List<Alias>("#Name=@Name", new { Name = "tom" });
+
+                //参数的写法3
+                DynamicParameters dynamicParameters = new DynamicParameters();
+                //dynamicParameters.Add("Name", "tom");
+                dynamicParameters.Add("Name", "tom", DbType.AnsiString, ParameterDirection.Input, 50);
+                IList<Alias> list = db.List<Alias>("#Name=@Name", dynamicParameters);
                 Assert.IsNotNull(list);
             }
         }
-
 
         [TestMethod]
         public void TestMethod9()
@@ -332,7 +339,6 @@ namespace Dapper.Extensions.UnitTest
             }
 
         }
-
 
         [TestMethod]
         public void TestMethod10()
@@ -601,11 +607,9 @@ namespace Dapper.Extensions.UnitTest
             }
         }
 
-
         [TestMethod]
         public void TestMethod19()
         {
-
             IList<RoleEntity> entities = new List<RoleEntity>();
             for (int i = 0; i < 10; i++)
             {
@@ -625,26 +629,104 @@ namespace Dapper.Extensions.UnitTest
             }
         }
 
+        [TestMethod]
+        public void TestMethod20()
+        {
+            IList<RoleEntity> entities = new List<RoleEntity>();
+            for (int i = 0; i < 10; i++)
+            {
+                RoleEntity entity = new RoleEntity
+                {
+                    Name = "jack" + i.ToString(),
+                    CreatedTime = DateTime.Now,
+                    LastModifyTime = DateTime.Now
+                };
+                entities.Add(entity);
+            }
+
+            using (IDbContext db = new DbContext())
+            {
+                IClassMapper classMapper = ClassMapperFactory.GetMapper<RoleEntity>();
+                string tableName = classMapper.TableName;
+                int result1 = db.Execute("delete from " + tableName);
+                Assert.IsTrue(result1 >= 0);
+
+                bool flag = db.Insert<RoleEntity>(entities);
+                Assert.IsTrue(flag);
+
+                string condition = "LastModifyTime<=@Now";
+                DynamicParameters dynamicParameters = new DynamicParameters();
+                dynamicParameters.Add("Name", "tom");
+                dynamicParameters.Add("CreatedTime", new DateTime(1900, 1, 1));
+                dynamicParameters.Add("Now", DateTime.Now);
+                bool flag1 = db.Update(tableName, new List<string>() { "Name", "CreatedTime" }, condition, dynamicParameters);
+                Assert.IsTrue(flag1);
+                IList<RoleEntity> list = db.List<RoleEntity>(null, (object)null);
+                Assert.IsNotNull(list);
+                Assert.AreEqual(10, list.Count);
+
+                foreach (RoleEntity roleEntity in list)
+                {
+                    Assert.IsNotNull(roleEntity);
+                    Assert.AreEqual("tom", roleEntity.Name);
+                    Assert.AreEqual(new DateTime(1900, 1, 1), roleEntity.CreatedTime);
+                }
+            }
+        }
+
+        [TestMethod]
+        public void TestMethod21()
+        {
+            using (IDbContext db = new DbContext())
+            {
+                PropertyChangedModel model = new PropertyChangedModel
+                {
+                    Id = Guid.NewGuid().ToString("N"),
+                    Name = "tom",
+                    Age=10
+                };
+
+                bool flag1 = db.Insert(model);
+                Assert.IsTrue(flag1);
+
+                PropertyChangedModel model1 = db.Get<PropertyChangedModel>(model.Id);
+                Assert.IsNotNull(model1);
+
+                model1.Name = "jack";
+                model1.Age = 20;
+                Assert.AreEqual(1, model1.PropertyChangedList.Count);
+                Assert.IsTrue(model1.PropertyChangedList.Contains("Name"));
+                bool flag2 = db.Update(model1);
+
+                PropertyChangedModel model2 = db.Get<PropertyChangedModel>(model.Id);
+                Assert.IsNotNull(model2);
+                Assert.AreEqual(model.Id, model2.Id);
+                Assert.AreEqual("jack", model2.Name);
+                Assert.AreEqual(model.Age, model2.Age);
+
+            }
+        }
+
         /// <summary>
         /// 比较字节数组
         /// </summary>
-        /// <param name="b1">字节数组1</param>
-        /// <param name="b2">字节数组2</param>
+        /// <param name="bytes1">字节数组1</param>
+        /// <param name="bytes2">字节数组2</param>
         /// <returns>如果两个数组相同，返回0；如果数组1小于数组2，返回小于0的值；如果数组1大于数组2，返回大于0的值。</returns>
-        private int MemoryCompare(byte[] b1, byte[] b2)
+        private int MemoryCompare(byte[] bytes1, byte[] bytes2)
         {
             int result = 0;
-            if (b1 == null && b2 == null)
+            if (bytes1 == null && bytes2 == null)
                 return result;
-            if (b1.Length != b2.Length)
-                result = b1.Length - b2.Length;
+            if (bytes1.Length != bytes2.Length)
+                result = bytes1.Length - bytes2.Length;
             else
             {
-                for (int i = 0; i < b1.Length; i++)
+                for (int i = 0; i < bytes1.Length; i++)
                 {
-                    if (b1[i] != b2[i])
+                    if (bytes1[i] != bytes2[i])
                     {
-                        result = (int)(b1[i] - b2[i]);
+                        result = (int)(bytes1[i] - bytes2[i]);
                         break;
                     }
                 }

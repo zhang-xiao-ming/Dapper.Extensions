@@ -57,11 +57,20 @@ namespace Dapper.Extensions
         }
 
 
-        public override string GetLimitOffsetSql(string sql, int firstResult, int maxResults, IDictionary<string, object> parameters)
+        public override string GetLimitOffsetSql(string sql, int firstResult, int maxResults, DynamicParameters dynamicParameters)
         {
+            if (string.IsNullOrEmpty(sql))
+            {
+                throw new ArgumentNullException("sql");
+            }
+
+            if (dynamicParameters == null)
+            {
+                throw new ArgumentNullException("dynamicParameters");
+            }
             string result = string.Format("{0} OFFSET @_firstResult ROWS FETCH NEXT @_maxResults ROWS ONLY", sql);
-            parameters.Add("_firstResult", firstResult);
-            parameters.Add("_maxResults", maxResults);
+            dynamicParameters.Add("_firstResult", firstResult);
+            dynamicParameters.Add("_maxResults", maxResults);
             return result;
         }
     }

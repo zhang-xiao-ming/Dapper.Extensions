@@ -17,11 +17,14 @@ namespace Dapper.Extensions
         IList<IPropertyMap> GetKeys();
         IPropertyMap GetVersionMap();
         IPropertyMap GetPersistedMap();
+        IPropertyMap GetPropertyChangedListMap();
+        IEnumerable<IPropertyMap> GetColumnMaps();
     }
 
-    public interface IClassMapper<T> : IClassMapper where T : class
+    public interface IClassMapper<in T> : IClassMapper where T : class
     {
         void BeforeSave(T entity);
         void AfterSave(T entity);
+        
     }
 }

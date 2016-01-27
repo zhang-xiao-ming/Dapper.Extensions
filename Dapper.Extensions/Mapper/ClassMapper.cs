@@ -109,7 +109,7 @@ namespace Dapper.Extensions
 
         private void GuardForDuplicatePropertyMap(PropertyMap result)
         {
-            if (Properties.Any(p => p.Name.Equals(result.Name)))
+            if (Properties.Any(p => p != null && p.Name.Equals(result.Name)))
             {
                 throw new ArgumentException(string.Format("属性{0}发现多个映射配置。 ", result.Name));
             }
@@ -117,27 +117,32 @@ namespace Dapper.Extensions
 
         public IPropertyMap GetPropertyMapByName(string name)
         {
-            return Properties.SingleOrDefault(m => m != null && string.Compare(m.Name, name, StringComparison.OrdinalIgnoreCase) == 0);
+            return Properties.SingleOrDefault(p => p != null && string.Compare(p.Name, name, StringComparison.OrdinalIgnoreCase) == 0);
         }
 
         public IPropertyMap GetPropertyMapByColumnName(string columnName)
         {
-            return Properties.SingleOrDefault(m => m != null && string.Compare(m.ColumnName, columnName, StringComparison.OrdinalIgnoreCase) == 0);
+            return Properties.SingleOrDefault(p => p != null && string.Compare(p.ColumnName, columnName, StringComparison.OrdinalIgnoreCase) == 0);
         }
 
         public IList<IPropertyMap> GetKeys()
         {
-            return Properties.Where(p => p.KeyType != KeyType.NotAKey).ToList();
+            return Properties.Where(p => p!=null && p.KeyType != KeyType.NotAKey).ToList();
         }
 
         public IPropertyMap GetVersionMap()
         {
-            return Properties.SingleOrDefault(p => p.IsVersion);
+            return Properties.SingleOrDefault(p => p != null && p.IsVersion);
         }
 
         public IPropertyMap GetPersistedMap()
         {
-            return Properties.SingleOrDefault(p => p.IsPersisted);
+            return Properties.SingleOrDefault(p => p != null && p.IsPersisted);
+        }
+
+        public IPropertyMap GetPropertyChangedListMap()
+        {
+            return Properties.SingleOrDefault(p => p != null && p.IsPropertyChangedList);
         }
 
         public string GetColumnName(string name)
@@ -160,6 +165,11 @@ namespace Dapper.Extensions
         public virtual void AfterSave(T entity)
         {
             if (AfterSaveAction != null) AfterSaveAction.Invoke(entity);
+        }
+
+        public virtual IEnumerable<IPropertyMap> GetColumnMaps()
+        {
+            return this.Properties.Where(p => p != null && !(p.IsIgnored || p.IsReadOnly || p.KeyType == KeyType.Identity || p.IsPersisted || p.IsPropertyChangedList));
         }
     }
 }

@@ -15,7 +15,6 @@ namespace Dapper.Extensions
         private bool _disposed;
         private static readonly object SyncRoot = new object();
         public string ConnectionName { get; private set; }
-
         public DbContext(string connectionName = "Default", string databaseName = null)
         {
             DbContextData data = GetDbContextData(connectionName, databaseName);
@@ -29,7 +28,6 @@ namespace Dapper.Extensions
                 DbConnection.Open();
             }
         }
-
         private DbContextData CreateDbContextData(string connectionName = "Default", string databaseName = null)
         {
             DbContextData data = new DbContextData();
@@ -86,7 +84,6 @@ namespace Dapper.Extensions
             }
             return data ?? CreateDbContextData(connectionName, databaseName);
         }
-
         public IDbConnection DbConnection { get; private set; }
         public IDbTransaction DbTransaction { get; private set; }
         public ISqlGenerator SqlGenerator { get; private set; }
@@ -194,13 +191,20 @@ namespace Dapper.Extensions
                     SqlGenerator.DbProvider.QuoteString(classMapper.GetVersionMap().ColumnName), oldVersion);
                 classMapper.GetVersionMap().PropertyInfo.SetValue(entity, oldVersion + 1, null);
             }
-            SqlConvertResult sqlConvertResult = SqlGenerator.Update(classMapper, keyConditionResult.Sql, keyConditionResult.Parameters);
-            bool flag = DbConnection.Execute(sqlConvertResult.Sql, entity, DbTransaction, commandTimeout, CommandType.Text) > 0;
+            SqlConvertResult sqlConvertResult = SqlGenerator.Update(classMapper, keyConditionResult.Sql, keyConditionResult.Parameters,entity);
+            sqlConvertResult.Parameters.AddDynamicParams(entity);
+            bool flag = DbConnection.Execute(sqlConvertResult.Sql, sqlConvertResult.Parameters, DbTransaction, commandTimeout, CommandType.Text) > 0;
             if (flag)
             {
                 classMapper.AfterSave(entity);
             }
             return flag;
+        }
+
+        public bool Update(string tableName, IList<string> updateFields, string condition,DynamicParameters dynamicParameters,int? commandTimeout = null)
+        {
+            SqlConvertResult sqlConvertResult = SqlGenerator.Update(tableName, updateFields, condition, dynamicParameters);
+            return DbConnection.Execute(sqlConvertResult.Sql, sqlConvertResult.Parameters, DbTransaction, commandTimeout, CommandType.Text) > 0;
         }
 
         public bool Delete<T>(T entity, string tableName = null, int? commandTimeout = null) where T : class
@@ -228,6 +232,15 @@ namespace Dapper.Extensions
             if (result == null) return null;
             IPropertyMap persistedMap = classMapper.GetPersistedMap();
             if (persistedMap != null) persistedMap.PropertyInfo.SetValue(result, true, null);
+            IPropertyMap propertyChangedListMap = classMapper.GetPropertyChangedListMap();
+            if (propertyChangedListMap!=null)
+            {
+                IList<string> changedList = propertyChangedListMap.PropertyInfo.GetValue(result, null) as IList<string>;
+                if(changedList!=null)
+                {
+                    changedList.Clear();
+                }
+            }
             return result;
         }
 
@@ -241,43 +254,81 @@ namespace Dapper.Extensions
             return isPersisted ? Update(entity, tableName, commandTimeout) : Insert(entity, tableName, commandTimeout);
         }
 
-        public IList<T> List<T>(string condition, Dictionary<string, object> parameters, int? commandTimeout = null) where T : class
+        public IList<T> List<T>(string condition, DynamicParameters dynamicParameters, int? commandTimeout = null) where T : class
         {
-            return List<T>(null, condition, parameters, commandTimeout);
+            return List<T>(null, condition, dynamicParameters, commandTimeout);
         }
-        public IList<T> List<T>(string tableName, string condition, IDictionary<string, object> parameters, int? commandTimeout = null) where T : class
+        public IList<T> List<T>(string tableName, string condition, DynamicParameters dynamicParameters, int? commandTimeout = null) where T : class
         {
             IClassMapper classMapper = ClassMapperFactory.GetMapper<T>(tableName);
-            SqlConvertResult sqlConvertResult = SqlGenerator.Select(classMapper, condition, null, parameters);
+            SqlConvertResult sqlConvertResult = SqlGenerator.Select(classMapper, condition, null, dynamicParameters);
             return DbConnection.Query<T>(sqlConvertResult.Sql, sqlConvertResult.Parameters, DbTransaction, true, commandTimeout, CommandType.Text).ToList();
+        }
+
+        public IList<T> List<T>(string tableName, string condition, IDictionary<string, object> parameters,
+            int? commandTimeout = null) where T : class
+        {
+            DynamicParameters dynamicParameters = new DynamicParameters();
+            dynamicParameters.AddDynamicParams(parameters);
+            return List<T>(tableName, condition, dynamicParameters, commandTimeout);
+        }
+
+        public IList<T> List<T>(string condition, IDictionary<string, object> parameters, int? commandTimeout = null)
+            where T : class
+        {
+            DynamicParameters dynamicParameters = new DynamicParameters();
+            dynamicParameters.AddDynamicParams(parameters);
+            return List<T>(condition, dynamicParameters, commandTimeout);
         }
 
         public IList<T> List<T>(string tableName, string condition, object parameters, int? commandTimeout = null) where T : class
         {
-            IDictionary<string, object> paramValues = ReflectionHelper.GetObjectValues(parameters);
-            return List<T>(tableName, condition, paramValues, commandTimeout);
+            DynamicParameters dynamicParameters = new DynamicParameters();
+            dynamicParameters.AddDynamicParams(parameters);
+            return List<T>(tableName, condition, dynamicParameters, commandTimeout);
         }
 
         public IList<T> List<T>(string condition, object parameters, int? commandTimeout = null) where T : class
         {
-            return List<T>(null, condition, parameters, commandTimeout);
+            DynamicParameters dynamicParameters = new DynamicParameters();
+            dynamicParameters.AddDynamicParams(parameters);
+            return List<T>(null, condition, dynamicParameters, commandTimeout);
         }
 
-        public IList<T> List<T>(string condition, string orderBy, IDictionary<string, object> parameters, int firstResult, int maxResults, int? commandTimeout = null) where T : class
+        public IList<T> List<T>(string condition, string orderBy, DynamicParameters dynamicParameters, int firstResult, int maxResults, int? commandTimeout = null) where T : class
         {
-            return List<T>(null, condition, orderBy, parameters, firstResult, maxResults, commandTimeout);
+            return List<T>(null, condition, orderBy, dynamicParameters, firstResult, maxResults, commandTimeout);
         }
-        public IList<T> List<T>(string tableName, string condition, string orderBy, IDictionary<string, object> parameters, int firstResult, int maxResults, int? commandTimeout = null) where T : class
+        public IList<T> List<T>(string tableName, string condition, string orderBy, DynamicParameters dynamicParameters, int firstResult, int maxResults, int? commandTimeout = null) where T : class
         {
             IClassMapper classMapper = ClassMapperFactory.GetMapper<T>(tableName);
-            SqlConvertResult sqlConvertResult = SqlGenerator.Select(classMapper, firstResult, maxResults, condition, orderBy, parameters);
+            SqlConvertResult sqlConvertResult = SqlGenerator.Select(classMapper, firstResult, maxResults, condition, orderBy, dynamicParameters);
             return DbConnection.Query<T>(sqlConvertResult.Sql, sqlConvertResult.Parameters, DbTransaction, true, commandTimeout, CommandType.Text).ToList();
+        }
+
+        public IList<T> List<T>(string tableName, string condition, string orderBy,
+            IDictionary<string, object> parameters, int firstResult, int maxResults, int? commandTimeout = null)
+            where T : class
+        {
+            DynamicParameters dynamicParameters = new DynamicParameters();
+            dynamicParameters.AddDynamicParams(parameters);
+
+            return List<T>(tableName, condition, orderBy, dynamicParameters, firstResult, maxResults, commandTimeout);
+        }
+
+        public IList<T> List<T>(string condition, string orderBy, IDictionary<string, object> parameters, int firstResult,
+            int maxResults, int? commandTimeout = null) where T : class
+        {
+            DynamicParameters dynamicParameters = new DynamicParameters();
+            dynamicParameters.AddDynamicParams(parameters);
+            return List<T>(null, condition, orderBy, dynamicParameters, firstResult, maxResults, commandTimeout);
         }
 
         public IList<T> List<T>(string tableName, string condition, string orderBy, object parameters, int firstResult, int maxResults, int? commandTimeout = null) where T : class
         {
-            IDictionary<string, object> paramValues = ReflectionHelper.GetObjectValues(parameters);
-            return List<T>(tableName, condition, orderBy, paramValues, firstResult, maxResults, commandTimeout);
+            DynamicParameters dynamicParameters = new DynamicParameters();
+            dynamicParameters.AddDynamicParams(parameters);
+            return List<T>(tableName, condition, orderBy, dynamicParameters, firstResult, maxResults, commandTimeout);
         }
 
         public IList<T> List<T>(string condition, string orderBy, object parameters, int firstResult, int maxResults, int? commandTimeout = null) where T : class
@@ -285,21 +336,22 @@ namespace Dapper.Extensions
             return List<T>(null, condition, orderBy, parameters, firstResult, maxResults, commandTimeout);
         }
 
-        public int Count<T>(string condition, IDictionary<string, object> parameters, int? commandTimeout = null) where T : class
+        public int Count<T>(string condition, DynamicParameters dynamicParameters, int? commandTimeout = null) where T : class
         {
-            return Count<T>(null, condition, parameters, commandTimeout);
+            return Count<T>(null, condition, dynamicParameters, commandTimeout);
         }
-        public int Count<T>(string tableName, string condition, IDictionary<string, object> parameters, int? commandTimeout = null) where T : class
+        public int Count<T>(string tableName, string condition, DynamicParameters dynamicParameters, int? commandTimeout = null) where T : class
         {
             IClassMapper classMapper = ClassMapperFactory.GetMapper<T>(tableName);
-            SqlConvertResult sqlConvertResult = SqlGenerator.Count(classMapper, condition, parameters);
+            SqlConvertResult sqlConvertResult = SqlGenerator.Count(classMapper, condition, dynamicParameters);
             return DbConnection.Query<int>(sqlConvertResult.Sql, sqlConvertResult.Parameters, DbTransaction, true, commandTimeout, CommandType.Text).SingleOrDefault();
         }
 
         public int Count<T>(string tableName, string condition, object parameters, int? commandTimeout = null) where T : class
         {
-            IDictionary<string, object> paramValues = ReflectionHelper.GetObjectValues(parameters);
-            return Count<T>(tableName, condition, paramValues, commandTimeout);
+            DynamicParameters dynamicParameters = new DynamicParameters();
+            dynamicParameters.AddDynamicParams(parameters);
+            return Count<T>(tableName, condition, dynamicParameters, commandTimeout);
         }
 
         public int Count<T>(string condition, object parameters, int? commandTimeout = null) where T : class
@@ -308,17 +360,51 @@ namespace Dapper.Extensions
         }
 
 
-        public PagingResult<T> Paging<T>(string condition, string orderBy, IDictionary<string, object> parameters, int pageIndex, int pageSize, int? commandTimeout = null) where T : class
+        public int Count<T>(string tableName, string condition, IDictionary<string, object> parameters,
+            int? commandTimeout = null) where T : class
         {
-            return Paging<T>(null, condition, orderBy, parameters, pageIndex, pageSize, commandTimeout);
+            DynamicParameters dynamicParameters = new DynamicParameters();
+            dynamicParameters.AddDynamicParams(parameters);
+            return Count<T>(tableName, condition, dynamicParameters, commandTimeout);
         }
 
-        public PagingResult<T> Paging<T>(string tableName, string condition, string orderBy, IDictionary<string, object> parameters, int pageIndex, int pageSize, int? commandTimeout = null) where T : class
+        public int Count<T>(string condition, IDictionary<string, object> parameters, int? commandTimeout = null)
+            where T : class
+        {
+            DynamicParameters dynamicParameters = new DynamicParameters();
+            dynamicParameters.AddDynamicParams(parameters);
+            return Count<T>(condition, dynamicParameters, commandTimeout);
+        }
+
+        public PagingResult<T> Paging<T>(string tableName, string condition, string orderBy,
+            IDictionary<string, object> parameters, int pageIndex, int pageSize, int? commandTimeout = null)
+            where T : class
+        {
+            DynamicParameters dynamicParameters = new DynamicParameters();
+            dynamicParameters.AddDynamicParams(parameters);
+            return Paging<T>(tableName, condition, orderBy, dynamicParameters, pageIndex, pageSize, commandTimeout);
+        }
+
+        public PagingResult<T> Paging<T>(string condition, string orderBy, IDictionary<string, object> parameters,
+            int pageIndex, int pageSize, int? commandTimeout = null) where T : class
+        {
+            DynamicParameters dynamicParameters = new DynamicParameters();
+            dynamicParameters.AddDynamicParams(parameters);
+            return Paging<T>(condition, orderBy, dynamicParameters, pageIndex, pageSize, commandTimeout);
+        }
+
+
+        public PagingResult<T> Paging<T>(string condition, string orderBy, DynamicParameters dynamicParameters, int pageIndex, int pageSize, int? commandTimeout = null) where T : class
+        {
+            return Paging<T>(null, condition, orderBy, dynamicParameters, pageIndex, pageSize, commandTimeout);
+        }
+
+        public PagingResult<T> Paging<T>(string tableName, string condition, string orderBy, DynamicParameters dynamicParameters, int pageIndex, int pageSize, int? commandTimeout = null) where T : class
         {
             int startValue = (pageIndex - 1) * pageSize;
-            int totalRecords = Count<T>(tableName, condition, parameters, commandTimeout);
+            int totalRecords = Count<T>(tableName, condition, dynamicParameters, commandTimeout);
             int totalPages = (int)Math.Ceiling((double)totalRecords / pageSize);
-            IList<T> list = List<T>(tableName, condition, orderBy, parameters, startValue, pageSize, commandTimeout);
+            IList<T> list = List<T>(tableName, condition, orderBy, dynamicParameters, startValue, pageSize, commandTimeout);
             PagingResult<T> result = new PagingResult<T>
             {
                 List = list,
@@ -330,8 +416,9 @@ namespace Dapper.Extensions
 
         public PagingResult<T> Paging<T>(string tableName, string condition, object parameters, int pageIndex, int pageSize, int? commandTimeout = null) where T : class
         {
-            IDictionary<string, object> paramValues = ReflectionHelper.GetObjectValues(parameters);
-            return Paging<T>(tableName, condition, paramValues, pageIndex, pageSize, commandTimeout);
+            DynamicParameters dynamicParameters = new DynamicParameters();
+            dynamicParameters.AddDynamicParams(parameters);
+            return Paging<T>(tableName, condition, dynamicParameters, pageIndex, pageSize, commandTimeout);
         }
 
         public PagingResult<T> Paging<T>(string condition, object parameters, int pageIndex, int pageSize, int? commandTimeout = null) where T : class

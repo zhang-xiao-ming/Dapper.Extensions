@@ -27,16 +27,16 @@ namespace Dapper.Extensions
             return "SELECT CAST(SCOPE_IDENTITY()  AS BIGINT) AS [Id]";
         }
 
-        public override string GetLimitOffsetSql(string sql, int firstResult, int maxResults, IDictionary<string, object> parameters)
+        public override string GetLimitOffsetSql(string sql, int firstResult, int maxResults, DynamicParameters dynamicParameters)
         {
             if (string.IsNullOrEmpty(sql))
             {
                 throw new ArgumentNullException("sql");
             }
 
-            if (parameters == null)
+            if (dynamicParameters == null)
             {
-                throw new ArgumentNullException("parameters");
+                throw new ArgumentNullException("dynamicParameters");
             }
 
             int selectIndex = GetSelectEnd(sql) + 1;
@@ -51,7 +51,7 @@ namespace Dapper.Extensions
             string result = string.Format("SELECT TOP({0}) {1} FROM ({2}) [_proj] WHERE {3} > @_pageStartRow ORDER BY {3}",
                 maxResults, projectedColumns.Trim(), newSql, GetColumnName("_proj", "_row_number", null));
 
-            parameters.Add("_pageStartRow", firstResult);
+            dynamicParameters.Add("_pageStartRow", firstResult);
             return result;
         }
 

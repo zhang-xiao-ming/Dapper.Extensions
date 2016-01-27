@@ -6,8 +6,8 @@ namespace Dapper.Extensions
     {
         IDbProvider DbProvider { get; }
         string BuildSelectColumns(IClassMapper classMapper);
-        SqlConvertResult Count(IClassMapper classMapper, string condition, IDictionary<string, object> parameters);
-        SqlConvertResult Delete(IClassMapper classMapper, string condition, IDictionary<string, object> parameters);
+        SqlConvertResult Count(IClassMapper classMapper, string condition, DynamicParameters dynamicParameters);
+        SqlConvertResult Delete(IClassMapper classMapper, string condition, DynamicParameters dynamicParameters);
         KeyConditionResult GetKeyConditionByEntity<T>(IClassMapper classMapper, T entity) where T : class;
         KeyConditionResult GetKeyConditionById(IClassMapper classMapper, object id);
 
@@ -15,15 +15,15 @@ namespace Dapper.Extensions
         string GetColumnName(IClassMapper classMapper, IPropertyMap property, bool includeAlias);
         string GetTableName(IClassMapper classMapper);
         string IdentitySql(IClassMapper classMapper);
-        SqlConvertResult Insert(IClassMapper classMapper, IDictionary<string, object> parameters);
-        SqlConvertResult Select(IClassMapper classMapper, string condition, string orderBy, IDictionary<string, object> parameters, bool hasNoLock = true);
-        SqlConvertResult Select(IClassMapper classMapper, int firstResult, int maxResults, string condition, string orderBy, IDictionary<string, object> parameters);
-        SqlConvertResult SqlConvert(IClassMapper classMapper, string sql, IDictionary<string, object> parameters);
+        SqlConvertResult Insert(IClassMapper classMapper, DynamicParameters dynamicParameters);
+        SqlConvertResult Select(IClassMapper classMapper, string condition, string orderBy, DynamicParameters dynamicParameters, bool hasNoLock = true);
+        SqlConvertResult Select(IClassMapper classMapper, int firstResult, int maxResults, string condition, string orderBy, DynamicParameters dynamicParameters);
+        SqlConvertResult SqlConvert(IClassMapper classMapper, string sql, DynamicParameters dynamicParameters);
 
         string SqlConvert(IClassMapper classMapper, string sql);
         bool SupportsMultipleStatements();
-        SqlConvertResult Update(IClassMapper classMapper, string condition, IDictionary<string, object> parameters);
-
+        SqlConvertResult Update(IClassMapper classMapper, string condition, DynamicParameters dynamicParameters, object entity = null);
+        SqlConvertResult Update(string tableName, IList<string> updateFields, string condition,DynamicParameters dynamicParameters);
         string ReplaceQuote(string sql);
 
         /// <summary>

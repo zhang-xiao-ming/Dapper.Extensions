@@ -5,7 +5,6 @@ using System.Text;
 
 namespace DomainModel
 {
-
     /// <summary>
     /// 用户信息
     /// </summary>

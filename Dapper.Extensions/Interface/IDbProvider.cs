@@ -20,7 +20,7 @@ namespace Dapper.Extensions
         string GetTableName(string schemaName, string tableName, string alias);
         string GetColumnName(string prefix, string columnName, string alias);
         string GetIdentitySql(string tableName);
-        string GetLimitOffsetSql(string sql, int firstResult, int maxResults, IDictionary<string, object> parameters);
+        string GetLimitOffsetSql(string sql, int firstResult, int maxResults, DynamicParameters dynamicParameters);
         bool IsQuoted(string value);
         string QuoteString(string value);
 
@@ -119,7 +119,7 @@ namespace Dapper.Extensions
 
         public abstract string GetIdentitySql(string tableName);
 
-        public abstract string GetLimitOffsetSql(string sql, int firstResult, int maxResults, IDictionary<string, object> parameters);
+        public abstract string GetLimitOffsetSql(string sql, int firstResult, int maxResults, DynamicParameters dynamicParameters);
 
         public virtual bool IsQuoted(string value)
         {

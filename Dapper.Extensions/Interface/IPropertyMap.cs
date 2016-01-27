@@ -12,5 +12,7 @@ namespace Dapper.Extensions
         PropertyInfo PropertyInfo { get; }
         bool IsVersion { get; }
         bool IsPersisted { get; }
+        bool IsPropertyChangedList { get; }
+
     }
 }

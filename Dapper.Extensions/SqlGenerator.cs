@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -66,7 +68,7 @@ namespace Dapper.Extensions
             {
                 throw new ArgumentException("必须定义一个主键列。");
             }
-            KeyConditionResult result = new KeyConditionResult { Parameters = new Dictionary<string, object>() };
+            KeyConditionResult result = new KeyConditionResult { Parameters = new DynamicParameters() };
             List<string> list = new List<string>();
             foreach (IPropertyMap property in whereFields)
             {
@@ -80,7 +82,7 @@ namespace Dapper.Extensions
         public virtual KeyConditionResult GetKeyConditionById(IClassMapper classMapper, object id)
         {
             bool isSimpleType = ReflectionHelper.IsSimpleType(id.GetType());
-            KeyConditionResult result = new KeyConditionResult { Parameters = new Dictionary<string, object>() };
+            KeyConditionResult result = new KeyConditionResult { Parameters = new DynamicParameters() };
             if (isSimpleType)
             {
                 IPropertyMap property = classMapper.Properties.Single(p => p.KeyType != KeyType.NotAKey);
@@ -107,7 +109,8 @@ namespace Dapper.Extensions
             SqlConvertResult result = SqlConvert(classMapper, sql, null);
             return result == null ? string.Empty : result.Sql;
         }
-        public virtual SqlConvertResult SqlConvert(IClassMapper classMapper, string sql, IDictionary<string, object> parameters)
+
+        public virtual SqlConvertResult SqlConvert(IClassMapper classMapper, string sql, DynamicParameters dynamicParameters)
         {
             SqlConvertResult result = new SqlConvertResult();
             if (!string.IsNullOrWhiteSpace(sql) && sql.Contains("#"))
@@ -120,20 +123,14 @@ namespace Dapper.Extensions
                 }
             }
             result.Sql = sql;
-            if (parameters == null) return result;
-            DynamicParameters dynamicParameters = new DynamicParameters();
-            foreach (KeyValuePair<string, object> pair in parameters)
-            {
-                string name = pair.Key.StartsWith(DbProvider.ParameterPrefix.ToString()) ? pair.Key : DbProvider.ParameterPrefix + pair.Key;
-                dynamicParameters.Add(name, pair.Value);
-            }
+            if (dynamicParameters == null) return result;
             result.Parameters = dynamicParameters;
             return result;
         }
 
-        public virtual SqlConvertResult Select(IClassMapper classMapper, string condition, string orderBy, IDictionary<string, object> parameters, bool hasNoLock = true)
+        public virtual SqlConvertResult Select(IClassMapper classMapper, string condition, string orderBy, DynamicParameters dynamicParameters, bool hasNoLock = true)
         {
-            SqlConvertResult result = SqlConvert(classMapper, condition, parameters);
+            SqlConvertResult result = SqlConvert(classMapper, condition, dynamicParameters);
             StringBuilder sql = new StringBuilder();
             sql.Append("SELECT ").Append(BuildSelectColumns(classMapper)).Append(" FROM ").Append(GetTableName(classMapper));
             if (hasNoLock)
@@ -151,9 +148,9 @@ namespace Dapper.Extensions
             return result;
         }
 
-        public virtual SqlConvertResult Count(IClassMapper classMapper, string condition, IDictionary<string, object> parameters)
+        public virtual SqlConvertResult Count(IClassMapper classMapper, string condition, DynamicParameters dynamicParameters)
         {
-            SqlConvertResult result = SqlConvert(classMapper, condition, parameters);
+            SqlConvertResult result = SqlConvert(classMapper, condition, dynamicParameters);
             StringBuilder sql = new StringBuilder(string.Format("SELECT COUNT(*) AS {0}Total{1} FROM {2}",
                 DbProvider.OpenQuote, DbProvider.CloseQuote, GetTableName(classMapper)));
             if (!string.IsNullOrWhiteSpace(condition))
@@ -164,17 +161,17 @@ namespace Dapper.Extensions
             return result;
         }
 
-        public virtual SqlConvertResult Insert(IClassMapper classMapper, IDictionary<string, object> parameters)
+        public virtual SqlConvertResult Insert(IClassMapper classMapper, DynamicParameters dynamicParameters)
         {
-            SqlConvertResult result = SqlConvert(classMapper, null, parameters);
-            var columns = classMapper.Properties.Where(p => !(p.IsIgnored || p.IsReadOnly || p.KeyType == KeyType.Identity));
-            if (!columns.Any())
+            SqlConvertResult result = SqlConvert(classMapper, null, dynamicParameters);
+            var columnMaps = classMapper.GetColumnMaps();
+            if (!columnMaps.Any())
             {
                 throw new ArgumentException("没有被映射的列。");
             }
 
-            var columnNames = columns.Select(p => GetColumnName(classMapper, p, false));
-            var parameterNames = columns.Select(p => DbProvider.ParameterPrefix + p.Name);
+            var columnNames = columnMaps.Select(p => GetColumnName(classMapper, p, false));
+            var parameterNames = columnMaps.Select(p => DbProvider.ParameterPrefix + p.Name);
 
             string sql = string.Format("INSERT INTO {0} ({1}) VALUES ({2})", GetTableName(classMapper),
                 columnNames.AppendStrings(), parameterNames.AppendStrings());
@@ -182,20 +179,44 @@ namespace Dapper.Extensions
             return result;
         }
 
-        public virtual SqlConvertResult Update(IClassMapper classMapper, string condition, IDictionary<string, object> parameters)
+        public virtual SqlConvertResult Update(IClassMapper classMapper, string condition, DynamicParameters dynamicParameters, object entity=null)
         {
-            if (parameters == null)
+            if (dynamicParameters == null)
             {
-                throw new ArgumentNullException("parameters");
+                throw new ArgumentNullException("dynamicParameters");
             }
 
-            var columns = classMapper.Properties.Where(p => !(p.IsIgnored || p.IsReadOnly || p.KeyType == KeyType.Identity || p.IsPersisted));
-            if (!columns.Any())
+            var columnMaps = classMapper.GetColumnMaps();
+            if (!columnMaps.Any())
             {
                 throw new ArgumentException("没有被映射的列。");
             }
-            SqlConvertResult result = SqlConvert(classMapper, condition, parameters);
-            var setSql = columns.Select(p =>
+
+            if (entity != null)
+            {
+                IPropertyMap propertyChangedListMap = classMapper.GetPropertyChangedListMap();
+                if (propertyChangedListMap != null)
+                {
+                    IList<string> propertyChangedList = propertyChangedListMap.PropertyInfo.GetValue(entity, null) as IList<string>;
+                    if (propertyChangedList != null && propertyChangedList.Count > 0)
+                    {
+                        propertyChangedList = propertyChangedList.Distinct().ToList();
+                        IList<IPropertyMap> propertyMaps = new List<IPropertyMap>();
+                        foreach (string name in propertyChangedList)
+                        {
+                            if (string.IsNullOrWhiteSpace(name))
+                                continue;
+                            IPropertyMap propertyMap =  columnMaps.FirstOrDefault(m => m != null && string.Compare(m.Name, name.Trim(), StringComparison.OrdinalIgnoreCase)==0);
+                            if (propertyMap != null)
+                                propertyMaps.Add(propertyMap);
+                        }
+                        columnMaps = propertyMaps;
+                    }
+                }
+            }
+
+            SqlConvertResult result = SqlConvert(classMapper, condition, dynamicParameters);
+            var setSql = columnMaps.Select(p =>
                 string.Format("{0} = {1}{2}", GetColumnName(classMapper, p, false), DbProvider.ParameterPrefix, p.Name));
 
             string updateSql = string.Format("UPDATE {0} SET {1} WHERE {2}", GetTableName(classMapper),
@@ -204,26 +225,50 @@ namespace Dapper.Extensions
             return result;
         }
 
-        public virtual SqlConvertResult Delete(IClassMapper classMapper, string condition, IDictionary<string, object> parameters)
+        public virtual SqlConvertResult Update(string tableName, IList<string> updateFields, string condition,
+            DynamicParameters dynamicParameters)
         {
-            if (parameters == null)
+            if (dynamicParameters == null)
             {
-                throw new ArgumentNullException("parameters");
+                throw new ArgumentNullException("dynamicParameters");
             }
-            SqlConvertResult result = SqlConvert(classMapper, condition, parameters);
+            if (updateFields == null)
+            {
+                throw new ArgumentNullException("updateFields");
+            }
+
+            var setSql = updateFields.Select(p =>
+                string.Format("{0} = {1}{2}", p, DbProvider.ParameterPrefix, p));
+            string updateSql = string.Format("UPDATE {0} SET {1} WHERE {2}", tableName,
+                setSql.AppendStrings(), condition);
+            SqlConvertResult result = new SqlConvertResult
+            {
+                Sql = updateSql,
+                Parameters = dynamicParameters
+            };
+            return result;
+        }
+
+        public virtual SqlConvertResult Delete(IClassMapper classMapper, string condition, DynamicParameters dynamicParameters)
+        {
+            if (dynamicParameters == null)
+            {
+                throw new ArgumentNullException("dynamicParameters");
+            }
+            SqlConvertResult result = SqlConvert(classMapper, condition, dynamicParameters);
             StringBuilder sql = new StringBuilder(string.Format("DELETE FROM {0}", GetTableName(classMapper)));
             sql.Append(" WHERE ").Append(result.Sql);
             result.Sql = sql.ToString();
             return result;
         }
 
-        public virtual SqlConvertResult Select(IClassMapper classMapper, int firstResult, int maxResults, string condition, string orderBy, IDictionary<string, object> parameters)
+        public virtual SqlConvertResult Select(IClassMapper classMapper, int firstResult, int maxResults, string condition, string orderBy, DynamicParameters dynamicParameters)
         {
-            if (parameters == null)
-                parameters = new Dictionary<string, object>();
+            if (dynamicParameters == null)
+                dynamicParameters = new DynamicParameters();
             SqlConvertResult sqlConvertResult = Select(classMapper, condition, orderBy, null);
-            string sql = DbProvider.GetLimitOffsetSql(sqlConvertResult.Sql, firstResult, maxResults, parameters);
-            sqlConvertResult = SqlConvert(classMapper, sql, parameters);
+            string sql = DbProvider.GetLimitOffsetSql(sqlConvertResult.Sql, firstResult, maxResults, dynamicParameters);
+            sqlConvertResult = SqlConvert(classMapper, sql, dynamicParameters);
             return sqlConvertResult;
         }
 
@@ -268,6 +313,6 @@ namespace Dapper.Extensions
     {
         public string Sql { get; set; }
 
-        public IDictionary<string, object> Parameters { get; set; }
+        public DynamicParameters Parameters { get; set; }
     }
 }
