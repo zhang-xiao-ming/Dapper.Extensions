@@ -401,6 +401,10 @@ namespace Dapper.Extensions
 
         public PagingResult<T> Paging<T>(string tableName, string condition, string orderBy, DynamicParameters dynamicParameters, int pageIndex, int pageSize, int? commandTimeout = null) where T : class
         {
+            if (pageIndex <= 0)
+                throw new ArgumentNullException("pageIndex");
+            if(pageSize<=0)
+                throw new ArgumentNullException("pageSize");
             int startValue = (pageIndex - 1) * pageSize;
             int totalRecords = Count<T>(tableName, condition, dynamicParameters, commandTimeout);
             int totalPages = (int)Math.Ceiling((double)totalRecords / pageSize);
