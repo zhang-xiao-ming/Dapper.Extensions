@@ -73,7 +73,7 @@ namespace Dapper.Extensions
             foreach (IPropertyMap property in whereFields)
             {
                 list.Add(string.Concat(DbProvider.OpenQuote, property.ColumnName, DbProvider.CloseQuote, "=", DbProvider.ParameterPrefix, property.Name));
-                result.Parameters.Add(property.Name, property.PropertyInfo.GetValue(entity, null));
+                result.Parameters.Add(property.Name, property.PropertyInfo.GetValue(entity, null), property.DbType, null, property.Size);
             }
             result.Sql = list.AppendStrings(" AND ");
             return result;
@@ -87,7 +87,7 @@ namespace Dapper.Extensions
             {
                 IPropertyMap property = classMapper.Properties.Single(p => p.KeyType != KeyType.NotAKey);
                 result.Sql = string.Concat(DbProvider.OpenQuote, property.ColumnName, DbProvider.CloseQuote, "=", DbProvider.ParameterPrefix, property.Name);
-                result.Parameters.Add(property.Name, id);
+                result.Parameters.Add(property.Name, id, property.DbType, null, property.Size);
             }
             else
             {
@@ -97,7 +97,7 @@ namespace Dapper.Extensions
                 foreach (IPropertyMap property in keys)
                 {
                     list.Add(string.Concat(DbProvider.OpenQuote, property.ColumnName, DbProvider.CloseQuote, "=", DbProvider.ParameterPrefix, property.Name));
-                    result.Parameters.Add(property.Name, paramValues[property.Name]);
+                    result.Parameters.Add(property.Name, paramValues[property.Name], property.DbType, null, property.Size);
                 }
                 result.Sql = list.AppendStrings(" AND ");
             }

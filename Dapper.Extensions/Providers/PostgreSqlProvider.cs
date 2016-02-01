@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-
+using System.Data;
 namespace Dapper.Extensions
 {
     public class PostgreSqlProvider : AbstractDbProvider
@@ -31,8 +31,8 @@ namespace Dapper.Extensions
                 throw new ArgumentNullException("dynamicParameters");
             }
             string result = string.Format("{0} LIMIT @_firstResult OFFSET @_pageStartRowNbr", sql);
-            dynamicParameters.Add("_firstResult", firstResult);
-            dynamicParameters.Add("_maxResults", maxResults);
+            dynamicParameters.Add("_firstResult", firstResult,DbType.Int32);
+            dynamicParameters.Add("_maxResults", maxResults, DbType.Int32);
             return result;
         }
 

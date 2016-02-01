@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
-
+using System.Data;
 namespace Dapper.Extensions
 {
     public class PropertyMap : IPropertyMap
@@ -22,6 +22,9 @@ namespace Dapper.Extensions
 
         public string ColumnName { get; private set; }
 
+        public DbType? DbType { get; private set; }
+        public int? Size { get; private set; }
+
         public KeyType KeyType { get; private set; }
 
         public bool IsIgnored { get; private set; }
@@ -39,6 +42,18 @@ namespace Dapper.Extensions
         public PropertyMap Column(string columnName)
         {
             ColumnName = columnName;
+            return this;
+        }
+
+        public PropertyMap SetDbType(DbType? dbType)
+        {
+            DbType = dbType;
+            return this;
+        }
+
+        public PropertyMap SetSize(int? size)
+        {
+            Size = size;
             return this;
         }
 

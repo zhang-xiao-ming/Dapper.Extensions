@@ -1,6 +1,6 @@
 ﻿using DomainModel;
 using System;
-
+using System.Data;
 namespace Dapper.Extensions.UnitTest
 {
     public sealed class UserEntityMapper : ClassMapper<UserEntity>
@@ -16,8 +16,8 @@ namespace Dapper.Extensions.UnitTest
     {
         public MultikeyMapper()
         {
-            MapProperty(p => p.Key1).Key(KeyType.Assigned);
-            MapProperty(p => p.Key2).Key(KeyType.Assigned);
+            MapProperty(p => p.Key1).Key(KeyType.Assigned).SetDbType(DbType.AnsiString);
+            MapProperty(p => p.Key2).Key(KeyType.Assigned).SetDbType(DbType.AnsiString);
             AutoMap();
         }
     }

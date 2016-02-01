@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-
+using System.Data;
 namespace Dapper.Extensions
 {
     public class SqliteProvider : AbstractDbProvider
@@ -32,8 +32,8 @@ namespace Dapper.Extensions
             }
 
             var result = string.Format("{0} LIMIT @_Offset, @_Count", sql);
-            dynamicParameters.Add("_Offset", firstResult);
-            dynamicParameters.Add("_Count", maxResults);
+            dynamicParameters.Add("_Offset", firstResult,DbType.Int32);
+            dynamicParameters.Add("_Count", maxResults,DbType.Int32);
             return result;
         }
 
