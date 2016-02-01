@@ -23,7 +23,7 @@ namespace Dapper.Extensions
         string SqlConvert(IClassMapper classMapper, string sql);
         bool SupportsMultipleStatements();
         SqlConvertResult Update(IClassMapper classMapper, string condition, DynamicParameters dynamicParameters, object entity = null);
-        SqlConvertResult Update(string tableName, IList<string> updateFields, string condition,DynamicParameters dynamicParameters);
+        SqlConvertResult Update(string tableName, IList<string> updateFields, string condition, DynamicParameters dynamicParameters);
         string ReplaceQuote(string sql);
 
         /// <summary>

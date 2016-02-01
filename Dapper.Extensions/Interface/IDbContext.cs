@@ -17,7 +17,7 @@ namespace Dapper.Extensions
 
         bool Update<T>(T entity, string tableName = null, int? commandTimeout = null) where T : class;
 
-        bool Update(string tableName, IList<string> updateFields, string condition, DynamicParameters dynamicParameters,int? commandTimeout = null);
+        bool Update(string tableName, IList<string> updateFields, string condition, DynamicParameters dynamicParameters, int? commandTimeout = null);
 
         bool Save<T>(T entity, string tableName = null, int? commandTimeout = null) where T : class;
 

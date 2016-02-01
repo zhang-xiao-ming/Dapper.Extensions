@@ -25,6 +25,6 @@ namespace Dapper.Extensions
     {
         void BeforeSave(T entity);
         void AfterSave(T entity);
-        
+
     }
 }

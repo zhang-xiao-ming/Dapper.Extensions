@@ -179,7 +179,7 @@ namespace Dapper.Extensions
             return result;
         }
 
-        public virtual SqlConvertResult Update(IClassMapper classMapper, string condition, DynamicParameters dynamicParameters, object entity=null)
+        public virtual SqlConvertResult Update(IClassMapper classMapper, string condition, DynamicParameters dynamicParameters, object entity = null)
         {
             if (dynamicParameters == null)
             {
@@ -206,7 +206,7 @@ namespace Dapper.Extensions
                         {
                             if (string.IsNullOrWhiteSpace(name))
                                 continue;
-                            IPropertyMap propertyMap =  columnMaps.FirstOrDefault(m => m != null && string.Compare(m.Name, name.Trim(), StringComparison.OrdinalIgnoreCase)==0);
+                            IPropertyMap propertyMap = columnMaps.FirstOrDefault(m => m != null && string.Compare(m.Name, name.Trim(), StringComparison.OrdinalIgnoreCase) == 0);
                             if (propertyMap != null)
                                 propertyMaps.Add(propertyMap);
                         }

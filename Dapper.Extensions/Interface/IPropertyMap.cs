@@ -7,8 +7,8 @@ namespace Dapper.Extensions
     {
         string Name { get; }
         string ColumnName { get; }
-        DbType? DbType { get;}
-        int? Size { get;}
+        DbType? DbType { get; }
+        int? Size { get; }
         bool IsIgnored { get; }
         bool IsReadOnly { get; }
         KeyType KeyType { get; }

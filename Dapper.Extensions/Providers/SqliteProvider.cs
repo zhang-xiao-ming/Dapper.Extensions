@@ -32,8 +32,8 @@ namespace Dapper.Extensions
             }
 
             var result = string.Format("{0} LIMIT @_Offset, @_Count", sql);
-            dynamicParameters.Add("_Offset", firstResult,DbType.Int32);
-            dynamicParameters.Add("_Count", maxResults,DbType.Int32);
+            dynamicParameters.Add("_Offset", firstResult, DbType.Int32);
+            dynamicParameters.Add("_Count", maxResults, DbType.Int32);
             return result;
         }
 

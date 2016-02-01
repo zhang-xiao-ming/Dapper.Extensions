@@ -683,7 +683,7 @@ namespace Dapper.Extensions.UnitTest
                 {
                     Id = Guid.NewGuid().ToString("N"),
                     Name = "tom",
-                    Age=10
+                    Age = 10
                 };
 
                 bool flag1 = db.Insert(model);

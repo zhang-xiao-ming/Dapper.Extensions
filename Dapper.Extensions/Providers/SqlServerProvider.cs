@@ -51,7 +51,7 @@ namespace Dapper.Extensions
             string result = string.Format("SELECT TOP({0}) {1} FROM ({2}) [_proj] WHERE {3} > @_pageStartRow ORDER BY {3}",
                 maxResults, projectedColumns.Trim(), newSql, GetColumnName("_proj", "_row_number", null));
 
-            dynamicParameters.Add("_pageStartRow", firstResult,DbType.Int32);
+            dynamicParameters.Add("_pageStartRow", firstResult, DbType.Int32);
             return result;
         }
 

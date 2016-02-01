@@ -127,7 +127,7 @@ namespace Dapper.Extensions
 
         public IList<IPropertyMap> GetKeys()
         {
-            return Properties.Where(p => p!=null && p.KeyType != KeyType.NotAKey).ToList();
+            return Properties.Where(p => p != null && p.KeyType != KeyType.NotAKey).ToList();
         }
 
         public IPropertyMap GetVersionMap()

@@ -191,7 +191,7 @@ namespace Dapper.Extensions
                     SqlGenerator.DbProvider.QuoteString(classMapper.GetVersionMap().ColumnName), oldVersion);
                 classMapper.GetVersionMap().PropertyInfo.SetValue(entity, oldVersion + 1, null);
             }
-            SqlConvertResult sqlConvertResult = SqlGenerator.Update(classMapper, keyConditionResult.Sql, keyConditionResult.Parameters,entity);
+            SqlConvertResult sqlConvertResult = SqlGenerator.Update(classMapper, keyConditionResult.Sql, keyConditionResult.Parameters, entity);
             sqlConvertResult.Parameters.AddDynamicParams(entity);
             bool flag = DbConnection.Execute(sqlConvertResult.Sql, sqlConvertResult.Parameters, DbTransaction, commandTimeout, CommandType.Text) > 0;
             if (flag)
@@ -201,7 +201,7 @@ namespace Dapper.Extensions
             return flag;
         }
 
-        public bool Update(string tableName, IList<string> updateFields, string condition,DynamicParameters dynamicParameters,int? commandTimeout = null)
+        public bool Update(string tableName, IList<string> updateFields, string condition, DynamicParameters dynamicParameters, int? commandTimeout = null)
         {
             SqlConvertResult sqlConvertResult = SqlGenerator.Update(tableName, updateFields, condition, dynamicParameters);
             return DbConnection.Execute(sqlConvertResult.Sql, sqlConvertResult.Parameters, DbTransaction, commandTimeout, CommandType.Text) > 0;
@@ -233,10 +233,10 @@ namespace Dapper.Extensions
             IPropertyMap persistedMap = classMapper.GetPersistedMap();
             if (persistedMap != null) persistedMap.PropertyInfo.SetValue(result, true, null);
             IPropertyMap propertyChangedListMap = classMapper.GetPropertyChangedListMap();
-            if (propertyChangedListMap!=null)
+            if (propertyChangedListMap != null)
             {
                 IList<string> changedList = propertyChangedListMap.PropertyInfo.GetValue(result, null) as IList<string>;
-                if(changedList!=null)
+                if (changedList != null)
                 {
                     changedList.Clear();
                 }
@@ -403,7 +403,7 @@ namespace Dapper.Extensions
         {
             if (pageIndex <= 0)
                 throw new ArgumentNullException("pageIndex");
-            if(pageSize<=0)
+            if (pageSize <= 0)
                 throw new ArgumentNullException("pageSize");
             int startValue = (pageIndex - 1) * pageSize;
             int totalRecords = Count<T>(tableName, condition, dynamicParameters, commandTimeout);

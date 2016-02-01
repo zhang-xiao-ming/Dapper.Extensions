@@ -69,8 +69,8 @@ namespace Dapper.Extensions
                 throw new ArgumentNullException("dynamicParameters");
             }
             string result = string.Format("{0} OFFSET @_firstResult ROWS FETCH NEXT @_maxResults ROWS ONLY", sql);
-            dynamicParameters.Add("_firstResult", firstResult,DbType.Int32);
-            dynamicParameters.Add("_maxResults", maxResults,DbType.Int32);
+            dynamicParameters.Add("_firstResult", firstResult, DbType.Int32);
+            dynamicParameters.Add("_maxResults", maxResults, DbType.Int32);
             return result;
         }
     }
